@@ -12,4 +12,7 @@ data <- rbindlist(list(data_nwhl, data_scouting, data_womens))
 setnames(data, function(old) {tolower(gsub(" ", "_", old, fixed = TRUE))})
 setcolorder(data, "dataset")
 
+if (!dir.exists("data")) {
+  dir.create("data")
+}
 saveRDS(data, "data/data.rds")
