@@ -3,6 +3,7 @@
 # Packages ----------------------------------------------------------------
 ##########
 
+library(data.table)
 library(mgcv)
 library(ggplot2)
 
@@ -12,7 +13,7 @@ library(ggplot2)
 ###########
 
 # S sequences
-S <- 1000
+S <- 1500
 
 # Generate sequences
 seq_data <- rbindlist(lapply(1:S, function(s){
