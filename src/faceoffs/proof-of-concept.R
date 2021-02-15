@@ -89,8 +89,8 @@ ggplot(res, aes(x=time_since_fo,
                 y=p_mean, ymin = p_lower, ymax = p_upper,
                 col=faceoff_won)) +
   theme_light() +
-  xlab("goal probability") +
-  ylab("time since faceoff") +
+  xlab("time since faceoff") +
+  ylab("goal probability") +
   geom_line() +
   geom_hline(lty=2, yintercept = .01) +
   geom_ribbon(aes(fill=faceoff_won), alpha=0.25, col=NA)
