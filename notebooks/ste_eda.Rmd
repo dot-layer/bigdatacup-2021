@@ -1,0 +1,138 @@
+---
+title: "Data analysis"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup}
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+
+ggplot2::theme_set(ggplot2::theme_classic())
+ggplot2::theme_update(
+  
+  panel.grid.major.y = ggplot2::element_blank(),
+  legend.position = "bottom",
+  legend.title = ggplot2::element_text(size = 8),
+  axis.title.y = ggplot2::element_blank()
+  
+)
+```
+
+This is a quite exploratory data analysis on the "scouting" data. That dataset consists of Erie Otters 2019-2020 season data.
+
+## Overall data
+
+Let's first import our dataset and look at a couple of high-level things.
+
+```{r import_data}
+library(rmarkdown)
+source("data-raw/fetch-data.R")
+data <- data[dataset == "scouting",]
+paged_table(data)
+```
+
+How many games are we looking at? 
+
+```{r}
+length(unique(data$game_date))
+table(data$period)
+```
+
+Let's look at the number of observations and also how many of them implies Erie Otters team versus other teams.
+
+```{r}
+dim(data)
+dim(data[team == "Erie Otters",])
+```
+
+Makes sense, almost half of the occurrences implies the Erie Otters team. Considering we have `r length(unique(data$game_date))`, and that a game is 60 minutes, we then have on average `r round(nrow(data)/length(unique(data$game_date)))` ocurrences per game, which correspond to an entry every `r round((60*60)/(nrow(data)/length(unique(data$game_date))))` seconds. Wow ! Let's see the distribution of the number of events per second:
+
+```{r}
+library(ggplot2)
+nb_events <- data[, .(nb_events = .N), by = .(game_date, period, clock)]
+hist(nb_events$nb_events)
+table(nb_events$nb_events)
+wow <- nb_events[nb_events == 12,]
+data[game_date == wow$game_date & period == wow$period & clock == wow$clock,]
+```
+
+Overall, most of the moment contains 1 or 2 events ... By looking at the extermes we noticed it's because of penalties (like major fighting haha).
+
+One of the most important feature of this dataset is the `Event`, that basically says the row correspond to what kind of entry.
+
+```{r}
+table(data$event)
+round(table(data$event)/nrow(data), 2)
+```
+
+So we see a lot of `Play`, which corresponds to Pass attempts that are successful. Fortunately there is more successful pass than unsucessful (`Incomplete Play`) ... 
+
+## Faceoffs
+
+Because we want to put the emphasis on the faceoffs events for now, let's have a closer look at these kind of events.
+
+Let's look at the overall faceoff win % of Erie Otters and the number of faceoffs
+
+```{r}
+nrow(data[event == "Faceoff Win",])
+nrow(data[event == "Faceoff Win" & team == "Erie Otters",])/nrow(data[event == "Faceoff Win",])
+```
+
+Not that good ... let's look at the best players of the Erie Otters.
+
+```{r}
+fo_win <- data[event == "Faceoff Win" & team == "Erie Otters", .(nb_fo_won = .N), by = .(player)]
+fo_lost <- data[event == "Faceoff Win" & team != "Erie Otters", .(nb_fo_lost = .N), by = .(player = player_2)]
+fo_stats <- merge(fo_win, fo_lost, by = "player", all.x = TRUE)
+fo_stats[is.na(nb_fo_won), nb_fo_won := 0]
+fo_stats[is.na(nb_fo_lost), nb_fo_lost := 0]
+fo_stats[, nb_fo_total := nb_fo_won + nb_fo_lost]
+fo_stats[, fo_perc := nb_fo_won/nb_fo_total]
+fo_stats[order(-fo_perc)]
+```
+
+Let's look at the faceoff taken in power play versus even stength,
+
+```{r}
+data[away_team_skaters == home_team_skaters, pp_situation := "even"]
+data[home_team == "Erie Otters" & home_team_skaters > away_team_skaters, pp_situation := "pp_erie"]
+data[home_team != "Erie Otters" & home_team_skaters < away_team_skaters, pp_situation := "pp_erie"]
+data[home_team == "Erie Otters" & home_team_skaters < away_team_skaters, pp_situation := "pk_erie"]
+data[home_team != "Erie Otters" & home_team_skaters > away_team_skaters, pp_situation := "pk_erie"]
+data[event == "Faceoff Win" & team == "Erie Otters", fo_won_erie := TRUE]
+data[event == "Faceoff Win" & team != "Erie Otters", fo_won_erie := FALSE]
+table(data[event == "Faceoff Win"]$pp_situation)
+
+fo_data <- data[event == "Faceoff Win", .(fo = .N), .(pp_situation, fo_won_erie)]
+fo_data_tot <- data[event == "Faceoff Win", .(total_fo = .N), .(pp_situation)]
+fo_data <- merge(fo_data, fo_data_tot, by = "pp_situation", all.x = TRUE)
+fo_data[, fo_perc := fo/total_fo]
+
+ggplot(fo_data, aes(x = pp_situation, y = fo, fill = fo_won_erie)) +
+  geom_col(position = "fill") +
+  geom_text(data = fo_data[fo_won_erie == TRUE], aes(x = pp_situation, label = round(fo_perc, 2), y=fo_perc + 0.04))
+```
+
+Now, let's look at the position of the faceoff on the ice: 
+
+```{r}
+table(data[event == "Faceoff Win",]$x_coordinate)
+sum(table(data[event == "Faceoff Win",]$x_coordinate))
+ERIE_ZONES <- data.table(
+  period = rep(c(1:4), 2),
+  x_coordinate = c(169, 31, 169, 169, 31, 169, 31, 31),
+  fo_zone = c("off", "def", "off", "def", "off", "def")
+)
+data_fo_position <- merge(data[event == "Faceoff Win",], ERIE_ZONES, by = c("period", "x_coordinate"), all.x = TRUE)
+data_fo_position[event == "Faceoff Win" & is.na(fo_zone), fo_zone := "neutral"]
+table(data_fo_position$fo_zone)
+```
+
+In power play only:
+
+```{r}
+table(data_fo_position[pp_situation == "pp_erie",]$fo_zone)
+round(table(data_fo_position[pp_situation == "pp_erie",]$fo_zone)/nrow(data_fo_position[pp_situation == "pp_erie",]), 2)
+```
+
