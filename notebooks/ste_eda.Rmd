@@ -37,6 +37,7 @@ How many games are we looking at?
 ```{r}
 length(unique(data$game_date))
 table(data$period)
+range(data$game_date)
 ```
 
 Let's look at the number of observations and also how many of them implies Erie Otters team versus other teams.
