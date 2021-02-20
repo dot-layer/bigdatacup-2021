@@ -1,0 +1,55 @@
+---
+title: "Faceoff importance"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+**Length: 0.5 pages**
+
+Ici, on fait la mise en contexte et l'explication du problème.
+
+Explications des prochaines sections.
+
+
+## Exploratory data analysis
+
+**Length: 1.5-2.5 pages**
+
+Ici, on présente le jeu de données sur lequel on travaille:
+
+- informations de bases (nombre de matchs, nombre de faceoff, nombre de buts, etc)
+- visualisations nous permettant de comprendre un peu mieux l'effet du faceoff sur d'autres aspects (tirs dans les x secondes suivant le fo, l'emplacement des buts marqués, etc)
+
+Finalement, on présente quelques unes de nos hypothèses avec explications
+
+- regarde seulement le data Erie
+- faceoff en zone offensive 
+
+Pour conclure, on fait l'analyse (regression logistique) de l'effet du faceoff sur le fait de marquer un but a la fin d'une séquence.
+
+On devrait être en mesure à ce point ci de confirmer si gagner le faceoff aide de manière significative à marquer un but. Mais, on veut en savoir plus ...
+
+
+## Our approach
+
+**Length: 2-3 pages**
+
+Ici, on explique comment on va tenter de pousser plus loin. On voudrait savoir plus que le simple fait que "ca aide" ... à quel point ça aide?
+
+Brève explication de notre appproche (GAM).
+
+Résultats du modèle illustrer dans le graph, avec interprétation.
+
+
+## More results
+
+**Length: 1 pages**
+
+On refait notre analyse mais sur le data de la NHL. 
+
+Potentiellement expliquer quelques hypothèses supplémentaires (ex: prend le data de toutes les équipes car environ le même weigth, expliquer différence dans le data si le cas)
