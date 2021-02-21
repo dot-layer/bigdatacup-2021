@@ -38,8 +38,7 @@ sequences_exp[, time_since_faceoff_F := log(time_since_faceoff + 1)*(faceoff_won
 sequences_exp[, time_since_faceoff_T := log(time_since_faceoff + 1)*(faceoff_won == T)] 
 
 mod <- gam(formula = goal_scored ~ lo(time_since_faceoff_F, span=.7, degree=1) +
-             lo(time_since_faceoff_T, span=.7, degree=1) + 
-             situation,
+             lo(time_since_faceoff_T, span=.7, degree=1),
            # k = 15, fx = T),
            # k = length(kn), fx = T),
            # bs = "cr",

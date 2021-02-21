@@ -1,11 +1,16 @@
 ---
-title: "Faceoff importance"
-output: pdf_document
+output:
+  pdf_document:
+    includes:
+      in_header: "preamble.tex"
+  documentclass: report
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
+\maketitle
 
 ## Introduction
 
@@ -36,14 +41,34 @@ On devrait être en mesure à ce point ci de confirmer si gagner le faceoff aide
 
 
 ## Our approach
-
 **Length: 2-3 pages**
 
-Ici, on explique comment on va tenter de pousser plus loin. On voudrait savoir plus que le simple fait que "ca aide" ... à quel point ça aide?
+So far, we have gathered plenty of evidence that winning offensive faceoffs significantly increases your chances of scoring a goal.
+Our intuition also tells us that this effect is most prominent in the very first seconds following the faceoff win and that, over time, the fact that one has won or lost the (most recent) faceoff looses its importance.
+To verify that, let us take a closer look at the exact times the goals in questions were scored.
 
-Brève explication de notre appproche (GAM).
+(BARCHART OFF and DEF)
 
-Résultats du modèle illustrer dans le graph, avec interprétation.
+As shown in Figure~(BARCHART), and somewhat unsurprisingly, winning the faceoff tends to lead to more often to a quick goal.
+In particular, 4 goals were scored during the 4th second, that is, the timespan [3,4).
+**Comment y-axis on the right (giving probabilities).**
+**Interpret appropriately.**
+**Note presence of zero probabilities and explain why (due to the small number of data points).**
+This makes it hard to communicate the information about the content of barcharts like those of Figure~(BARCHART).
+To overcome such difficulty, let construct a smooth version of these latter using loess, a method for smoothing scatterplots (*locally estimated scatterplot smoothing*).
+**Informal model description: we want curves, an estimate of the probability of a goal occurring during a given time interval (of one second). One curve per situation (like in the bar chart).**
+See Section~(SEC) for a more formal description of the underlying model.
+**Highlight that one needs to fine tune a smoothing parameter and explain how that was done.**
+The results are displayed in Figure~(LOESS).
+
+(LOESS chart with various bandwidth, OFF and DEF)
+
+\begin{enumerate}
+  \item discuss results in depth --- GIVEN THAT THE SEQUENCE WAS LONGER THAN $t$.
+  \item SKIP PARAGRAPH. discuss weakness of loess: no confidence intervals for validating like we did previously.
+  \item discuss that not much data here, so possibly worthless anyways, (although CI from splines are conclusive).
+  \item discuss interesting questions that we cannot answer, need more data to use a more granular definition of situation.
+\end{enumerate}
 
 
 ## More results
@@ -53,3 +78,17 @@ Résultats du modèle illustrer dans le graph, avec interprétation.
 On refait notre analyse mais sur le data de la NHL. 
 
 Potentiellement expliquer quelques hypothèses supplémentaires (ex: prend le data de toutes les équipes car environ le même weigth, expliquer différence dans le data si le cas)
+
+
+#### Technical details.
+In the most basic case treated in this report, the underlying model takes the form
+$$
+  g(Y_t|x) \approx (1 - x) f_{0}(t) + x f_{1}(t),
+$$
+where $Y_t \in \{0,1\}$ indicates whether a goal occurred in the interval of time $[t,t+1)$,
+$x \in \{0,1\}$ indicates whether the faceoff was won or not,
+$g$ is the so-called logit function and
+$f_k$ is an unknown nonlinear function of $t$ that estimates $g(Y_t|x = k)$.
+The different methods presented in this report are distinct in the way the functions $f_k$ are estimated.
+The probabilities reported are obtained by solving this equation for $Y_t$.
+The loess of sec.xx and the spline regression of sec.yy were fitted using the gam package, which fits generalized additive models.
