@@ -80,15 +80,27 @@ On refait notre analyse mais sur le data de la NHL.
 Potentiellement expliquer quelques hypothèses supplémentaires (ex: prend le data de toutes les équipes car environ le même weigth, expliquer différence dans le data si le cas)
 
 
-#### Technical details.
-In the most basic case treated in this report, the underlying model takes the form
-$$
-  g(Y_t|x) \approx (1 - x) f_{0}(t) + x f_{1}(t),
-$$
-where $Y_t \in \{0,1\}$ indicates whether a goal occurred in the interval of time $[t,t+1)$,
-$x \in \{0,1\}$ indicates whether the faceoff was won or not,
-$g$ is the so-called logit function and
-$f_k$ is an unknown nonlinear function of $t$ that estimates $g(Y_t|x = k)$.
-The different methods presented in this report are distinct in the way the functions $f_k$ are estimated.
-The probabilities reported are obtained by solving this equation for $Y_t$.
+#### Technical details I.
+Denote $Y_t \in \{0,1\}$ the random variable indicating whether a goal occurred in the interval of time $[t,t+1)$, and let $\mathbb{E}(Y_t|x)$ be the expectation of $Y_t$ (corresponding to the probability of a goal occurring in that timespan) given that the most recent faceoff was lost ($x = 0$) or won ($x = 1$).
+The loess curves in Figure~(LOESS) were obtained by fitting the *generalized additive model* (gam)
+\begin{equation} \label{eq:gam1}
+  g\{\mathbb{E}(Y_t|x)\} = (1 - x) f_{0}(t) + x f_{1}(t), \qquad g(z) = \ln\{z/(1-z)\},
+\end{equation}
+where $g$ is the so-called logit function and, for both $k=0,1$,
+$f_k$ is an unknown (i.e., to be estimated) nonlinear function of $t$ that approximates $g(Y_t|x = k)$.
+The probabilities reported are obtained by solving this equation for $\mathbb{E}(Y_t|x)$ at each value of $t \in \{0,1,2,\dots\}$.
 The loess of sec.xx and the spline regression of sec.yy were fitted using the gam package, which fits generalized additive models.
+
+#### Technical details II.
+In Section~(SEC), we reproduce the analysis involving the model in \eqref{eq:gam1}, this time fitting the model using a splines-based technique (as opposed to a loess-based one).
+Loosely speaking, the two fitting procedures differ in the way the functions $f_k$ are approximated.
+The splines-based method allows us to construct confidence intervals as well.
+
+To perform the more granular analysis of Section~(SEC), we fit a model that includes a function **$2 \times ZZZ = ZZZ$** nonlinear functions of $t$.
+We use the subscripts $k \in \{0,1\}$ to indicate whether the faceoff was lost or won, and $\ell \in \{1,\dots,ZZZ\}$ to refer to each of the **ZZZ** situations specified in Section~(SEC).
+The resulting model is given by
+\begin{equation} \label{eq:gam2}
+  g\{\mathbb{E}(Y_t|x,s)\} = \sum_{\ell=1}^{Z} \mathbbm{1}(s = \ell) \times \Big\{(1 - x) f_{0\ell}(t) + x f_{1\ell}(t)\Big\},
+\end{equation}
+where $g$ is as in \eqref{eq:gam1}.
+Note that \eqref{eq:gam2} could actually be expressed and fit as ZZZ distinct models. However, this formulation makes it clear how to include further covariates that are known to have a similar effect in multiple situations.
