@@ -1,41 +1,132 @@
 ---
-title: "Faceoff importance"
-output: pdf_document
+title: "How bad should I win next faceoff?"
+subtitle: "Big Data Cup 2021"
+author: "Philippe Blouin-Leclerc, Stéphane Caron, Jean-Philippe Le Cavalier et Samuel Perreault"
+date: "`r format(as.Date('2021-03-05'), '%d %B, %Y')`"
+output:
+  bookdown::pdf_document2:
+    toc: false
+    number_sections: false
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE, message=FALSE)
 ```
 
-## Introduction
+During the course of a hockey game, there are a lot of faceoffs. The outcome of these events usually dictates which team will control the puck at the beginning of a sequence. Thereby, we can say that every faceoff are important. However, many would agree to say that some of these faceoffs are key moments, and thus have even more importance. As an example, a faceoff in the offensive zone, trailing by one goal with less than a minute to play would appears to be quite important. In this analysis, we will try to quantify the importance related to winning faceoffs. In other words, we want to confirm if winning a faceoff in the offensive zone is increasing the chances to score a goal during that sequence. On top of that, we would like to specifically answer this core question
 
-**Length: 0.5 pages**
+> To what extend is winning offensive zone faceoffs increase the chances to score a goal? What are the effects on the seconds following the faceoff? Is winning an offensive zone faceoff even more important in man advantage situations?
 
-Ici, on fait la mise en contexte et l'explication du problème.
+We targeted offensive zone faceoffs, because their impact on scoring a goal seemed more obvious as the team is already close to the opponent net. To answer that question, we decided to use the Erie Otters data made available in the [scounting dataset](https://raw.githubusercontent.com/bigdatacup/Big-Data-Cup-2021/main/hackathon_scouting.csv). Our rationale for using this dataset was to use data of one single team, which from our perspective, simplifies the interpretation and the conclusions. Moreover, the `scounting` dataset is the one having the most observations for a single team.
 
-Explications des prochaines sections.
-
-
-## Exploratory data analysis
-
-**Length: 1.5-2.5 pages**
-
-Ici, on présente le jeu de données sur lequel on travaille:
-
-- informations de bases (nombre de matchs, nombre de faceoff, nombre de buts, etc)
-- visualisations nous permettant de comprendre un peu mieux l'effet du faceoff sur d'autres aspects (tirs dans les x secondes suivant le fo, l'emplacement des buts marqués, etc)
-
-Finalement, on présente quelques unes de nos hypothèses avec explications
-
-- regarde seulement le data Erie
-- faceoff en zone offensive 
-
-Pour conclure, on fait l'analyse (regression logistique) de l'effet du faceoff sur le fait de marquer un but a la fin d'une séquence.
-
-On devrait être en mesure à ce point ci de confirmer si gagner le faceoff aide de manière significative à marquer un but. Mais, on veut en savoir plus ...
+In the next sections, we are going to try confirm the impact of winning offensive zone faceoffs on a sequence-by-sequence basis. Afterward, we are going to dive deeper in the effect of winning such faceoffs, by looking at seconds-per-seconds or man advantage situations. In conclusion, we will apply our approach to more data using NHL API (add link).
 
 
-## Our approach
+### Sequence-by-sequence 
+
+```{r import_data, cache=TRUE}
+source("../data-raw/fetch-data.R")
+source("../src/faceoffs/create-features.R")
+```
+
+As in all data science projects, we first need to understand the data we are working with. As mentionned in the introduction, we focused on the `scouting` dataset. For simplicity, we will use some abbreviations for few repeated terms in this analysis:
+
+- FO: Faceoff
+- OZ: Offensive Zone
+- DF: Defensive Zone
+- NZ: Neutral Zone
+- GF: Goal For Erie Otters
+- GA: Goal Against Erie Otters
+- Erie: Erie Otters
+
+In the table \@ref(tab:features1), we can see basic informations about the `scouting` dataset that appear relevant to our analysis. 
+
+```{r features1}
+library(data.table)
+library(dplyr)
+
+knitr::kable(
+  x = sequences[, .(
+  min_date = min(game_date),
+  max_date = max(game_date),
+  nb_games = length(unique(game_date)),
+  nb_fo = .N,
+  nb_won_fo = sum(faceoff_win),
+  nb_goals_for = sum(result_goal_for),
+  nb_goals_against = sum(result_goal_against)
+)],
+  format = "latex",
+  position = "h",
+  booktabs = T, 
+  col.names = c("Min. game date", "Max. game date", "Games", "FO", "Erie won FO", "GF", "GA"),
+  align = "c",
+  center = TRUE,
+  caption = "High-level features of the scouting dataset"
+)
+```
+
+In order to tackle our initial problem, we had to structure the data in a way that we can easily analyze each sequences. After doing so, we can now extract additionnal informations about our dataset (see table \@ref(tab:features2) and add context such as the position of the faceoff and the )
+ 
+```{r features2}
+library(kableExtra)
+sequences[faceoff_zone == "offense", faceoff_zone_table := "Offense"]
+sequences[faceoff_zone == "defense", faceoff_zone_table := "Defense"]
+sequences[faceoff_zone %in% c("blue_offense", "blue_defense", "red"), faceoff_zone_table := "Neutral"]
+sequences[, penalty_situation := "even"]
+sequences[team_skaters_nb > opponent_skaters_nb, penalty_situation := "pp"]
+sequences[team_skaters_nb < opponent_skaters_nb, penalty_situation := "pk"]
+
+test <- sequences[faceoff_zone %in% c("offense", "defense"), .(
+  nb_fo = .N,
+  nb_goals_for = sum(result_goal_for),
+  nb_goals_against = sum(result_goal_against)
+), by = .(faceoff_zone_table, faceoff_win, penalty_situation)]
+
+
+test[faceoff_zone_table == "Defense", gf_ga := nb_goals_against]
+test[faceoff_zone_table == "Offense", gf_ga := nb_goals_for]
+test[, c("nb_goals_for", "nb_goals_against") := NULL]
+
+test[, succes_rate := paste(round(100*gf_ga/nb_fo, 1), "%")]
+
+test2 <- dcast(test, faceoff_zone_table + faceoff_win ~ penalty_situation, value.var = c("nb_fo", "gf_ga", "succes_rate"), drop = F)
+setcolorder(test2, neworder = c("faceoff_zone_table", "faceoff_win", "nb_fo_pk", "gf_ga_pk", "succes_rate_pk", "nb_fo_even", "gf_ga_even", "succes_rate_even", "nb_fo_pp", "gf_ga_pp", "succes_rate_pp"))
+
+
+knitr::kable(
+  x = test2[, faceoff_zone_table := NULL],
+  format = "latex",
+  position = "h",
+  booktabs = T, 
+  col.names = c("FO won Erie", rep(c("FO", "GF | GA", "% success"), 3)),
+  align = "c",
+  center = TRUE,
+  caption = "Contextual data for faceoff situations"
+) %>% 
+  add_header_above(c(" " = 1, "PK" = 3, "Even" = 3, "PP" = 3)) %>% 
+  pack_rows("Defense", 1, 2) %>%
+  pack_rows("Offense", 3, 4)
+```
+
+From the table \@ref(tab:features2), we can see that we don't have a lot of goals scored by Erie Otters for sequences that started in the offensive zone (`r sum(sequences[faceoff_zone == "offense"]$result_goal_for)` goals) or goals against Erie for sequences that started in the defensive zone (`r sum(sequences[faceoff_zone == "defense"]$result_goal_against)` goals). Still, that might be sufficient for making conclusions on per-sequence basis. However, we strongly doubt that it will be sufficient for drawing conclusions on a more granular basis.
+
+Another thing we can notice from \@ref(tab:features2) is the success rate differences between won and lost faceoffs. From the data we have, we can already see the effect of winning the faceoff on man advantage situations. For even strength situations, the impacy is not that clear ...
+
+To see if the effect of winning the faceoff in the offensive zone is significant, we fitted a logistic regression. From the parametric anova table, we can conclude that (at least for Erie Otters) the effect is significant:
+
+```{r glm}
+library(gam)
+
+mod <- gam(formula = result_goal_for ~ 0 + faceoff_win,
+           family = binomial(),
+           data = sequences[faceoff_zone == "offense"])
+
+summary(mod)$parametric.anova
+```
+
+\newpage
+
+### Our approach
 
 **Length: 2-3 pages**
 
@@ -46,7 +137,7 @@ Brève explication de notre appproche (GAM).
 Résultats du modèle illustrer dans le graph, avec interprétation.
 
 
-## More results
+### More results
 
 **Length: 1 pages**
 
