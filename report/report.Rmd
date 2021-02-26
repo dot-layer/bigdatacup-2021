@@ -4,8 +4,8 @@ output:
     includes:
       in_header: "preamble.tex"
     toc: false
+    number_sections: false
   documentclass: report
-  number_sections: false
 ---
 
 ```{r setup, include=FALSE}
@@ -14,15 +14,13 @@ knitr::opts_chunk$set(echo = FALSE, message=FALSE)
 
 \maketitle
 
-During the course of a hockey game, there are a lot of faceoffs. The outcome of these events usually dictates which team will control the puck at the beginning of a sequence. Thereby, we can say that every faceoff are important. However, many would agree to say that we can attribure even more importance to some faceoffs happening during a game, synonym of key moments. As an example, a faceoff in the offensive zone, trailing by one goal with less than a minute to play would appears to be quite important. In this analysis, we will try to quantify the importance of winning faceoffs. Ultimately, we would like to be able to answer to these kind of questions:
+During the course of a hockey game, there are a lot of faceoffs. The outcome of these events usually dictates which team will control the puck at the beginning of a sequence. Thereby, we can say that every faceoff are important. However, many would agree to say that we can attribure even more importance to some faceoffs happening during a game. As an example, a faceoff in the offensive zone, trailing by one goal with less than a minute to play would appears to be quite important. In this analysis, we will try to quantify the importance of winning faceoffs. Ultimately, we would like to be able to answer these kind of questions:
 
+> **To what extend is winning offensive zone faceoffs increases the chances to score a goal? How long during a sequence can we notice the effect of winning or loosing a faceoff? Is winning offensive zone faceoffs even more important in man advantage situations?**
 
-> **To what extend is winning offensive zone faceoffs increases the chances to score a goal? How long after the faceoff we can notice the effect of winning or loosing it? Is winning offensive zone faceoffs even more important in man advantage situations?**
+To be more methodical, we will start by confirming if winning a faceoff in the offensive zone does increases significantly the chances to score a goal during that sequence. Once that will be confirmed, we will go more in-depth in understanding the importance of those events.
 
-
-To be honest, we will start by confirming if winning a faceoff in the offensive zone is increasing the chances to score a goal during that sequence. Once that will be confirmed, we will go more in-depth in understanding the importance of those events.
-
-As you may noticed, we targeted offensive zone faceoffs. The reason for that is we think their impact on scoring a goal is more obvious as the team is already close to the opponent net. We could also say we included defensive zone faceoffs, as it only depends from which team point of view you are looking at it. To answer the central question, we decided to use the Erie Otters data made available in the [scounting dataset](https://raw.githubusercontent.com/bigdatacup/Big-Data-Cup-2021/main/hackathon_scouting.csv). Our rationale for using this dataset was to use the data of one single team, and not bother having teams that played different amount of games. That way, we think it simplifies the interpretations and our capacity to draw conclusions. In that context, the `scounting` dataset is the one with the most observations. Because we consider one single team in our analysis, the Erie Otters in this case, that means we also consider some events stricly from Erie Otters point of view. For example, we can define these abbrevations that we will reuse throughout this analysis:
+As you may noticed, we targeted offensive zone faceoffs for the sake of this analysis. The reason for that is we think their impact on scoring a goal is more obvious as the team is already close to the opponent net. We could also say we included defensive zone faceoffs, as it only depends from which team point of view you are looking at it. We also decided to use the Erie Otters data made available in the [scounting dataset](https://raw.githubusercontent.com/bigdatacup/Big-Data-Cup-2021/main/hackathon_scouting.csv). Our rationale for using this dataset was to use the data of one single team, and not bother having teams that played different amount of games. That way, we think it simplifies the interpretations and our capacity to draw conclusions. In that context, the `scounting` dataset is the one with the most observations. Because we consider one single team in our analysis. we decided to define few terms considering we looking from Erie Otters point of view. The abbreviations below will be used in some graphs and tabs throughout this analysis:
 
 \begin{center}
   \begin{multicols}{2}
@@ -37,17 +35,17 @@ As you may noticed, we targeted offensive zone faceoffs. The reason for that is 
   \end{multicols}
 \end{center}
 
-In the next sections, we are going to first look at the data sequence by sequence. In this manner, we will be able to conclude if winning an offensive zone faceoff does have a significant impact of scoring a goal on that given sequence. Afterward, we will breakdown our sequences by seconds and see the impact of winning offensive zone faceoffs over time. We will also see if we can draw conclusions from different contexts, such as power play or penalty killing situations. Finally we will see if we can draw more robust conclusions over a bigger dataset, such as using NHL data (API link maybe?).
+In the next sections, we are going to first look at the data sequence-by-sequence. In this manner, we will be able to conclude if winning an offensive zone faceoff does have a significant impact of scoring a goal on that given sequence. Afterward, we will breakdown our sequences more in details, for example second-by-second, and see the impact of winning offensive zone faceoffs over time. We will also see if we can draw conclusions from different contexts, such as power play or penalty killing situations. Finally we will see if we can draw more robust conclusions over a bigger dataset, such as NHL data fetched using [`tidynhl`](https://jplecavalier.github.io/tidynhl/), a R package developped by one of us actually!
 
 
-## Sequence-by-sequence analysis
+## What is the overall impact of winning a faceoff?
 
 ```{r import_data, cache=TRUE}
 source("../data-raw/fetch-data.R")
 source("../src/faceoffs/create-features.R")
 ```
 
-As a first step, let's have a better understanding of the data we are working with. As mentionned in the introduction, we focused on the `scouting` dataset. In the table \@ref(tab:features1), we can see basic informations about the this dataset, and what might be relevant to know for our analysis.
+As a first step, we will try to figure out what is the overall effect of winning or loosing an offensive zone faceoff. Howver, let's start by making sure we have a good understanding of the data we are working with. As mentionned in the introduction, we focused on the `scouting` dataset. In the table \@ref(tab:features1), we can see basic informations about the this dataset, and what might be relevant to know for our analysis.
 
 ```{r features1}
 library(data.table)
@@ -59,8 +57,8 @@ dt_table <- sequences[, .(
   nb_games = length(unique(game_date)),
   nb_fo = .N,
   nb_fo_oz_dz = sum(faceoff_zone %in% c("offense", "defense")),
-  nb_goals_for = sum(result_goal_for),
-  nb_goals_against = sum(result_goal_against)
+  nb_goals = sum(result_goal_for) + sum(result_goal_against),
+  nb_goals_oz_dz = sum(faceoff_zone == "offense" & result_goal_for) + sum(faceoff_zone == "defense" & result_goal_against)
 )]
 
 knitr::kable(
@@ -68,16 +66,16 @@ knitr::kable(
   format = "latex",
   position = "h",
   booktabs = T, 
-  col.names = c("Min. game date", "Max. game date", "Games", "FOs", "OZ/DZ FOs", "GF", "GA"),
+  col.names = c("Min. game date", "Max. game date", "Games", "FOs", "OZ/DZ FOs", "Goals", "OZ/DZ Goals"),
   align = "c",
   center = TRUE,
   caption = "High-level features of the scouting dataset"
 )
 ```
 
-We have `r dt_table$nb_games` games of data, with `r dt_table$nb_fo` overall faceoffs. However, only `r dt_table$nb_fo_oz_dz` faceoffs will be relevant in our case since we focus on those that happened in the offensive/defensive zones. We have `r dt_table$nb_goals_for + dt_table$nb_goals_against` combined scored goals, but only `r sum(apply(sequences[faceoff_zone %in% c("offense", "defense"), .(result_goal_for, result_goal_against)], 2, sum))` where actually scored from a sequence that started in the offensive/defensive zones.
+We have `r dt_table$nb_games` games of data, with `r dt_table$nb_fo` overall faceoffs. However, only `r dt_table$nb_fo_oz_dz` faceoffs will be relevant in our case since we focus on those that happened in the offensive/defensive zones. We have `r dt_table$nb_goals` scored goals in total, but only `r dt_table$nb_goals_oz_dz` where actually scored by the team that started a sequence from their offensive zone.
 
-Talking about sequences, we had to structure the data in a way that we can easily analyze each sequences individually. To illustrate that, we added a preview (see table \@ref(tab:preview) of how our transformed data looks like on a per-sequence level.
+Talking about sequences, we had to structure the data in a way that we can easily analyze each sequences individually. To illustrate that, we added a preview (see table \@ref(tab:preview)) of how our transformed data looks like on a sequence-by-sequence basis.
 
 ```{r preview}
 library(kableExtra)
@@ -95,7 +93,7 @@ knitr::kable(
   
 ```
 
-In the table \@ref(tab:preview), we omitted to show some additionnal columns that bring contextual informations around the faceoff. The more obvious example of that is power player and penalty killing situations. In the table \@ref(tab:features2), we added more context and we also try to breakdown the scoring success depending the situation.
+In the table \@ref(tab:preview), we omitted to show some additionnal columns that bring contextual informations about the faceoff. The more obvious example of that is power player and penalty killing situations. In the table \@ref(tab:features2), we added more context and we also try to breakdown the scoring success depending the situation.
  
 ```{r features2}
 sequences[faceoff_zone == "offense", faceoff_zone_table := "Offensive"]
@@ -141,21 +139,20 @@ knitr::kable(
   pack_rows("Offensive", 3, 4)
 ```
 
-If we take a moment to analyze the table \@ref(tab:features2), we can see that we don't have a lot of goals scored by Erie Otters for sequences that started in the offensive zone (`r sum(sequences[faceoff_zone == "offense"]$result_goal_for)` goals) or goals against Erie for sequences that started in the defensive zone (`r sum(sequences[faceoff_zone == "defense"]$result_goal_against)` goals). Still, that might be sufficient for making conclusions on per-sequence basis. However, we strongly doubt that it will be sufficient for drawing conclusions on a more granular basis.
+A first conclusion we can draw from table \@ref(tab:features2) is that we don't have a lot of goals (`r sum(sequences[faceoff_zone == "offense"]$result_goal_for)`) scored by Erie Otters from sequences that started in the offensive zone. We will see later if it's sufficient to draw significant conclusions. However, we strongly doubt that it will be sufficient for drawing conclusions on a more granular basis, such as power play or penalty killing situations.
 
-Another thing we can notice from \@ref(tab:features2) is the success rate differences between won and lost faceoffs. From the data we have, we can already see the effect of winning the faceoff on man advantage situations. For even strength situations, the impact looks less significant.
-
-To see if the effect of winning the faceoff in the offensive zone is significant, we fitted a logistic regression for which we had the variable `GF` as a target, and the only variable `FO_win` as a feature. In that case, we kept the rows where the faceoffs happened in Erie offensive zone. From the paramtric anova table, we can conclude that model is significant and that winning a faceoff in the offensive zone does increase the chances to score a goal in that given sequence. We also tested using the `GA` and the defensive zones faceoffs, and the conclusions are the same.
+Another thing we can notice from the table \@ref(tab:features2) is the success rate differences between sequences that started with a won or a lost faceoff. From the data we have, we can already see the effect of winning the faceoff on power play situations. For even strength contexts, the impact looks less significant.
 
 ```{r glm}
-library(gam)
+mod <- glm(formula = result_goal_for ~ faceoff_win,
+           family = binomial,
+           data = sequences[faceoff_zone == "offense" & team_skaters_nb > opponent_skaters_nb])
 
-mod <- gam(formula = result_goal_for ~ 0 + faceoff_win,
-           family = binomial(),
-           data = sequences[faceoff_zone == "offense"])
-
-summary(mod)$parametric.anova
+summary <- summary(mod)
 ```
+
+To see if the effect of winning the faceoff in the offensive zone is significant, we fitted a logistic regression for which we defined the variable `GF` as a target and `FO_win` as our only feature. In that specific case, we kept the rows where the faceoffs happened in Erie offensive zone. From this model, we got a $\beta_{FO\_win} =$ `r summary$coefficients[2,][1]`. We can conclude that model is significant and that winning a faceoff in the offensive zone does increase the chances to score a goal in that given sequence. We also tested a logistic regression using the `GA` variable as a target and kept the defensive zones faceoffs rows only. Again, the conclusions are the same.
+
 
 \newpage
 
