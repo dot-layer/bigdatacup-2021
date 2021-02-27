@@ -146,12 +146,12 @@ Another thing we can notice from the table \@ref(tab:features2) is the success r
 ```{r glm}
 mod <- glm(formula = result_goal_for ~ faceoff_win,
            family = binomial,
-           data = sequences[faceoff_zone == "offense" & team_skaters_nb > opponent_skaters_nb])
+           data = sequences[faceoff_zone == "offense"])
 
 summary <- summary(mod)
 ```
 
-To see if the effect of winning the faceoff in the offensive zone is significant, we fitted a logistic regression for which we defined the variable `GF` as a target and `FO_win` as our only feature. In that specific case, we kept the rows where the faceoffs happened in Erie offensive zone. From this model, we got a $\beta_{FO\_win} =$ `r summary$coefficients[2,][1]`. We can conclude that model is significant and that winning a faceoff in the offensive zone does increase the chances to score a goal in that given sequence. We also tested a logistic regression using the `GA` variable as a target and kept the defensive zones faceoffs rows only. Again, the conclusions are the same.
+To see if the effect of winning the faceoff in the offensive zone is significant, we fitted a logistic regression for which we defined the variable `GF` as a target and `FO_win` as our only feature. In that specific case, we kept the rows where the faceoffs happened in Erie offensive zone. From this model, we got a $\beta_{FO\_win} =$ `r summary$coefficients[2,][1]` with a p-value of `r summary$coefficients[2,][4]`. From these numbers, we can conclude that winning an offensive zone faceoff seems to increase the chances to score a goal during a sequence, but we can't say it's significant, maybe because we don't have enough data. 
 
 
 \newpage
