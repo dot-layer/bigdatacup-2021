@@ -14,11 +14,14 @@ knitr::opts_chunk$set(echo = FALSE, message=FALSE)
 
 \maketitle
 
-During the course of a hockey game, there are a lot of faceoffs. The outcome of these events usually dictates which team will control the puck at the beginning of a sequence. Thereby, we can say that every faceoff are important. However, many would agree to say that we can attribure even more importance to some faceoffs happening during a game. As an example, a faceoff in the offensive zone, trailing by one goal with less than a minute to play would appears to be quite important. In this analysis, we will try to quantify the importance of winning faceoffs. Ultimately, we would like to be able to answer these kind of questions:
+During the course of a hockey game, there are is a lot of faceoffs \textcolor{red}{[Like how many?]}. The outcome of these events usually dictates which team will control the puck at the beginning of a sequence. Thereby, we can say that every faceoff is important. However, many would agree that some faceoffs are more important than others. As an example, a faceoff in the offensive zone with less than a minute on the clock when trailing by one goal would appear to be quite important. \textcolor{red}{[Je crois que plus de contexte ferait du bien ici. Le FO est important dans cette situation **parce qu'il te faut un but (si tu le perds tu perds pratiquement la game)**, pas parce que ce genre de faceoff-situation mène plus souvent à un but. MAIS JUSTEMENT, je garderais l'exemple pour enchainer avec ce qui nous intéresse particulièrement. J'essaierais de move away du facteur temps de la game et du pointage, mais de focaliser sur le **où** au faceoff.]} In this report, we try to quantify the importance of winning faceoffs, breaking it down by situation as much as possible. More precisely, we focus on the question
 
-> **To what extend is winning offensive zone faceoffs increases the chances to score a goal? How long during a sequence can we notice the effect of winning or loosing a faceoff? Is winning offensive zone faceoffs even more important in man advantage situations?**
+> **Are offensive/defensive zone faceoffs more important than neutral zone faceoffs, and to what extent?**
 
-To be more methodical, we will start by confirming if winning a faceoff in the offensive zone does increases significantly the chances to score a goal during that sequence. Once that will be confirmed, we will go more in-depth in understanding the importance of those events.
+Towards this end, we first assess whether the data matches our intuition that winning a faceoff in the offensive zone does increase the chances of scoring a goal during the sequence that follows.
+We then take a more in-depth look at sequences, breaking them down by seconds.
+
+SAM-HERE
 
 As you may noticed, we targeted offensive zone faceoffs for the sake of this analysis. The reason for that is we think their impact on scoring a goal is more obvious as the team is already close to the opponent net. We could also say we included defensive zone faceoffs, as it only depends from which team point of view you are looking at it. We also decided to use the Erie Otters data made available in the [scounting dataset](https://raw.githubusercontent.com/bigdatacup/Big-Data-Cup-2021/main/hackathon_scouting.csv). Our rationale for using this dataset was to use the data of one single team, and not bother having teams that played different amount of games. That way, we think it simplifies the interpretations and our capacity to draw conclusions. In that context, the `scounting` dataset is the one with the most observations. Because we consider one single team in our analysis. we decided to define few terms considering we looking from Erie Otters point of view. The abbreviations below will be used in some graphs and tabs throughout this analysis:
 
@@ -192,6 +195,7 @@ The results are displayed in Figure~(LOESS).
   \label{fig:barcharts}
 \end{figure}
 
+Discuss : How long during a sequence can we notice the effect of winning or loosing a faceoff?
 
 \begin{enumerate}
   \item discuss results in depth --- GIVEN THAT THE SEQUENCE WAS LONGER THAN $t$.
@@ -208,6 +212,8 @@ The results are displayed in Figure~(LOESS).
 On refait notre analyse mais sur le data de la NHL. 
 
 Potentiellement expliquer quelques hypothèses supplémentaires (ex: prend le data de toutes les équipes car environ le même weigth, expliquer différence dans le data si le cas)
+
+Another interesting question: Are (offensive) faceoffs even more important in powerplay situations?
 
 \medskip
 \rule{\textwidth}{1pt}
