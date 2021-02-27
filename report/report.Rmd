@@ -159,32 +159,30 @@ To see if the effect of winning the faceoff in the offensive zone is significant
 
 \newpage
 
-## Second-by-second analysis
-So far, we have gathered plenty of evidence that winning offensive faceoffs significantly increases your chances of scoring a goal.
+## Breaking down the sequences by seconds
+So far, we have gathered *some* evidence that winning offensive faceoffs increases the chances of scoring a goal.
 Our intuition also tells us that this effect should be most prominent in the very first seconds following the faceoff and that, over time, the fact that one has won or lost the faceoff should become less relevant.
-To verify that, let us take a closer look at the exact times the goals in questions were scored.
+To verify that, let us take a closer look at the times the goals in questions were scored.
+Although we do have the exact goal times (in seconds), we preferred to bin them over windows of 5 seconds.
 
 \begin{figure}
   \centering
   \includegraphics[width=.45\textwidth]{"figures/bar_off.png"}
   \qquad 
   \includegraphics[width=.45\textwidth]{"figures/bar_def.png"}
-  \caption{Percentage of times a goal was scored within the timespan $[t,t+1)$ for $t=0,\dots,30$, given that the sequence in question lasted at least $t$ seconds.}
+  \caption{Percentage of times a goal was scored within the timespan $[t,t+5)$ for $t=0,5,10,...,175$, {\bf given that the sequence in question lasted at least $t$ seconds}.}
   \label{fig:barcharts}
 \end{figure}
 
-As shown in Figure \ref{fig:barcharts}, and somewhat unsurprisingly, winning the faceoff tends to lead more often to a quick goal.
-In fact, four goals were scored between $t=3$ and $t=4$, which feels a bit odd, but not enough to worry us.
-It is important to note that the y-axis provides the number of times a goal was scored within the timespan $[t,t+1)$ divided by the number of sequences of duration $t$ or more.
-All the plotted bars actually corresponds to no more than ZZZ goals, while most bars suggest a zero probability that a goal gets scored within the timespan $[t,t+1)$.
-Naturally, this is because the number of events is rather limited.
-Such sparsness makes it hard to communicate the information contained in barcharts like those of Figure \ref{fig:barcharts}.
-To overcome such difficulty, let us construct a smooth version of these latter using loess (*locally estimated scatterplot smoothing*), a well-known method for smoothing scatterplots.
+Figure \ref{fig:barcharts} is encouraging: It suggests that winning an offensive faceoff (or losing a defensive faceoff) leads more often to a *quick goal*, where by *quick goal* we mean within the first five seconds of the sequence.
+However, note that no bars actually correspond to more than ZZZ goals.
+The far-right bar on the right panel, which is the tallest, corresponds to only ZZZ goals; what happens is that not many sequences reach the 175 seconds mark, just XX here in fact, so that adding or subtracting a goal can make a major difference.
+Also, for the same reason, many bars suggest a zero probability that a goal gets scored within their corresponding five-seconds window.
 
-**Informal model description: we want curves, an estimate of the probability of a goal occurring during a given time interval (of one second). One curve per situation (like in the bar chart).**
-See Section~(SEC) for a more formal description of the underlying model.
-**Highlight that one needs to fine tune a smoothing parameter and explain how that was done.**
-The results are displayed in Figure~(LOESS).
+The sparseness in the barcharts of Figure \ref{fig:barcharts}, which is due to the lack of data points, makes it hard to interpret them.
+To overcome such difficulty, let us construct a smooth version of these latter using a generalized additive model (*gam*) and the exact seconds at which the goals were scored.
+The objective is to construct curves that provides the *risk* of a goal being scored at any time point $t$ provided that the faceoff was either won or lost; one can interpret the value given by the curve as the probability of a goal being scored within a one-second time frame.
+See the **Technical details** section at the end of the report for a more formal description of the underlying model.
 
 \begin{figure}
   \centering
@@ -195,7 +193,6 @@ The results are displayed in Figure~(LOESS).
   \label{fig:barcharts}
 \end{figure}
 
-Discuss : How long during a sequence can we notice the effect of winning or loosing a faceoff?
 
 \begin{enumerate}
   \item discuss results in depth --- GIVEN THAT THE SEQUENCE WAS LONGER THAN $t$.
