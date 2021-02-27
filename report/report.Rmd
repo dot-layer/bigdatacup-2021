@@ -14,9 +14,9 @@ knitr::opts_chunk$set(echo = FALSE, message=FALSE)
 
 \maketitle
 
-During the course of a hockey game, there are is a lot of faceoffs \textcolor{red}{[Like how many?]}. The outcome of these events usually dictates which team will control the puck at the beginning of a sequence. Thereby, we can say that every faceoff is important. However, many would agree that some faceoffs are more important than others. As an example, a faceoff in the offensive zone with less than a minute on the clock when trailing by one goal would appear to be quite important. \textcolor{red}{[Je crois que plus de contexte ferait du bien ici. Le FO est important dans cette situation **parce qu'il te faut un but (si tu le perds tu perds pratiquement la game)**, pas parce que ce genre de faceoff-situation mène plus souvent à un but. MAIS JUSTEMENT, je garderais l'exemple pour enchainer avec ce qui nous intéresse particulièrement. J'essaierais de move away du facteur temps de la game et du pointage, mais de focaliser sur le **où** au faceoff.]} In this report, we try to quantify the importance of winning faceoffs, breaking it down by situation as much as possible. More precisely, we focus on the question
+During the course of a hockey game, there are is a lot of faceoffs (between 50 and 75 most of the time). The outcome of these events usually dictates which team will control the puck at the beginning of a sequence. Thereby, we can say that every faceoff is important. However, many would agree that some faceoffs are more important than others. As an example, a faceoff in the offensive zone with less than a minute on the clock when trailing by one goal would appear to be quite important. In that case, we can attach the importance to the moment in the game, but if we look at it in a broader sense, does winning a faceoff contributes to scoring a goal? In this report, we try to quantify the importance of winning faceoffs, breaking it down by situation as much as possible. More precisely, we focus on the question
 
-> **Are offensive/defensive zone faceoffs more important than neutral zone faceoffs, and to what extent?**
+> **Are offensive/defensive zone faceoffs are an important aspect of offensive successes (e.g. scoring a goal), and to what extent?**
 
 Towards this end, we first assess whether the data matches our intuition that winning a faceoff in the offensive zone does increase the chances of scoring a goal during the sequence that follows.
 We then take a more in-depth look at sequences, breaking them down by seconds.
@@ -154,7 +154,7 @@ mod <- glm(formula = result_goal_for ~ faceoff_win,
 summary <- summary(mod)
 ```
 
-To see if the effect of winning the faceoff in the offensive zone is significant, we fitted a logistic regression for which we defined the variable `GF` as a target and `FO_win` as our only feature. In that specific case, we kept the rows where the faceoffs happened in Erie offensive zone. From this model, we got a $\beta_{FO\_win} =$ `r summary$coefficients[2,][1]` with a p-value of `r summary$coefficients[2,][4]`. From these numbers, we can conclude that winning an offensive zone faceoff seems to increase the chances to score a goal during a sequence, but we can't say it's significant, maybe because we don't have enough data. 
+To see if the effect of winning an offensive zone faceoff is significant, we fitted a logistic regression for which we defined the variable `GF` as a target and `FO_win` as our only feature. In that specific case, we kept the rows where the faceoffs happened in Erie offensive zone. From this model, we got a $\beta_{FO\_win} =$ `r summary$coefficients[2,][1]` with a p-value of `r summary$coefficients[2,][4]`. From these numbers, we can conclude that winning an offensive zone faceoff seems to increase the chances to score a goal during a sequence, but we can't say it's significant. This may be caused by a lack of data, or also by mixing up multiple types of sequence togheter (power play, even strength, long sequences, etc).
 
 
 \newpage
