@@ -283,13 +283,23 @@ From the figure \ref{fig:barcharsnhl}, we can already see that the effect of win
   \label{fig:gamnhl}
 \end{figure}
 
-In the figure \ref{fig:gamnhl}, we can clearly see the spike when winning the faceoff in the moments following a faceoff. When can also see that the confidence intervals are now much more compact, and do not overlap between each others (at least in the first 20 seconds approximately).
+In the figure \ref{fig:gamnhl}, we can clearly see the spike when winning the faceoff in the moments that follows. When can also see that the confidence intervals are now much more smaller (compare to figure \ref{fig:gam}), and do not overlap between each others (at least in the first 20 seconds approximately). It also interesting to see that both curves converges 20 secondes and more after the faceoff. At some point, we can conclude that winning a faceoff does not provide an advantage that lasts forever.
+
+AJOUTER UNE AUTRE ANALYSE (OT ou COMPARE TEAMS)
 
 
 ## Let's wrap this up
 
+It's fair to say that most of the people that knows enough about hockey could have guessed that winning an offensive zone faceoff increases the chances to score a goal in the sequence that follows. However, this analysis allowed us to conclude few interesting things:
+
+- with enough data, we can conclude the increase is significant 
+- the effect of winning a faceoff does not lasts forever (about 20 secondes)
+- CONCLUSION OT or TEAMS comparisons
+
+We were able to breakdown the faceoffs in different situations, but we think it would also be interesting to explore other ideas:
+
+- compare the effect of winning an offensive zone faceoff in power play compare to even strength
+- compare different teams together and see how the impact varies between them
 
 
-Résumer no highlight
-Ouverture sur quoi on pourrait essayer deplus
 
