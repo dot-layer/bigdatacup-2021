@@ -230,7 +230,7 @@ Using the Erie Otters data available in the `scouting` dataset, we can see that 
 ```{r nhl1}
 seasons_to_keep <- c("2019-20", "2018-19")
 data_nhl <- fread("../data/nhl-2.csvy", yaml = T)
-dt_model_nhl <- data_nhl[team_status == "home" & season_years %in% seasons_to_keep]
+dt_model_nhl <- data_nhl[season_years %in% seasons_to_keep]
 
 dt_table <- dt_model_nhl[, .(
   min_date = as.Date(min(game_datetime)),
@@ -267,13 +267,23 @@ Now we have much more faceoffs, and also much more goals as well. In the same wa
 
 On sequence-by-sequence basis, we now know that the effect is significant. Considering that, let's recreate the breakdown by seconds as we did in the previous section to see how this effect last over time. As a first step, we can look at the goals scored in time, for which we decided to use bins of 2 seconds here (as we have more data).
 
-FIGURE BINS
+\begin{figure}
+  \centering
+  \includegraphics[width=0.8\textwidth]{"figures/bar_off_nhl.png"}
+  \caption{Percentage of times a goal was scored within the timespan $[t,t+2)$ for $t=0,2,4,...,60$, {\bf given that the sequence in question lasted at least $t$ seconds}.}
+  \label{fig:barcharsnhl}
+\end{figure}
 
-From the figure XXX, we can already see that the effect of winning an offensive zone faceoff is more obvious within 20 seconds after a faceoff. With this dataset, it is now more clear compared to what we had in the figure \ref{fig:barcharts}. Let's construct the smoother version of this bar chart using our gam model (see figure YYY).
+From the figure \ref{fig:barcharsnhl}, we can already see that the effect of winning an offensive zone faceoff is more obvious within 20 seconds after a faceoff. With this dataset, it is now more clear compared to what we had in the figure \ref{fig:barcharts}. Let's construct the smoother version of this bar chart using our gam model (see figure \ref{fig:gamnhl}).
 
-FIGURE GAM
+\begin{figure}
+  \centering
+  \includegraphics[width=.8\textwidth]{"figures/curve_off_nlh.png"}
+  \caption{Percentage of times a goal was scored within the timespan $[t,t+1)$ for $t=0,\dots,60$, given that the sequence in question lasted at least $t$ seconds.}
+  \label{fig:gamnhl}
+\end{figure}
 
-In the figure YYY, we can clearly see the spike when winning the faceoff in the moments following a faceoff. When can also see that the confidence intervals are now much more compact, and do not overlap between each others (at least in the first 20 seconds approximately).  \ref{fig:gam}
+In the figure \ref{fig:gamnhl}, we can clearly see the spike when winning the faceoff in the moments following a faceoff. When can also see that the confidence intervals are now much more compact, and do not overlap between each others (at least in the first 20 seconds approximately).
 
 
 ## Let's wrap this up
