@@ -12,27 +12,19 @@ expandSequenceNHL <- function(sequence, seq_id = NULL, max_time = NULL){
   }
   
   seq_dt <- data.table(seq_id = seq_id,
-                       season_years = sequence$season_years,
-                       game_datetime = sequence$game_datetime,
+                       season_years2 = as.integer(substr(sequence$season_years,6,7)),
+                       # game_datetime = sequence$game_datetime,
                        team_abbreviation = sequence$team_abbreviation,
-                       opponent_abbreviation = sequence$opponent_abbreviation,
-                       team_status = sequence$team_status,
-                       period_label = sequence$period_label,
+                       # opponent_abbreviation = sequence$opponent_abbreviation,
+                       # team_status = sequence$team_status,
+                       # period_label = sequence$period_label,
                        period_type = sequence$period_type,
-                       clock = clock)
-  
-  # time since faceoff
-  seq_dt[, time_since_faceoff := 0:(nrow(seq_dt)-1)]
-  
-  # goal scored
-  seq_dt[, goal_for_scored := c(rep(0,nrow(seq_dt)-1),sequence$result_goal_for*(!trunc))]
-  seq_dt[, goal_against_scored := c(rep(0,nrow(seq_dt)-1),sequence$result_goal_against*(!trunc))]
-  
-  # faceoff zone
-  seq_dt[, faceoff_zone := sequence$faceoff_zone]
-  
-  # faceoff won
-  seq_dt[, faceoff_won := factor(sequence$faceoff_win, levels = c(FALSE,TRUE))]
-  
+                       faceoff_zone = sequence$faceoff_zone,
+                       # faceoff_won = factor(sequence$faceoff_win, levels = c(FALSE,TRUE)),
+                       faceoff_won = sequence$faceoff_win,
+                       # clock = clock,
+                       time_since_faceoff = seq(length(clock))-1,
+                       goal_for_scored =     c(rep(0,length(clock)-1),sequence$result_goal_for*(!trunc)),
+                       goal_against_scored = c(rep(0,length(clock)-1),sequence$result_goal_against*(!trunc)))
   return(seq_dt)
 }
