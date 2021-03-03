@@ -305,15 +305,7 @@ On sequence-by-sequence basis, we now know that the effect is significant. Consi
 
 From the figure \ref{fig:barcharsnhl}, we can already see that the effect of winning an offensive zone faceoff is more obvious within 20 seconds after a faceoff. With this dataset, it is now more clear compared to what we had in the figure \ref{fig:barcharts}. Let's construct the smoother version of this bar chart using our gam model (see figure \ref{fig:gamnhl}).
 
-<<<<<<< HEAD
-\begin{figure}
-  \centering
-  \includegraphics[width=.8\textwidth]{"figures/curve_off_nlh.png"}
-  \caption{Percentage of times a goal was scored within the timespan $[t,t+1)$ for $t=0,\dots,60$, given that the sequence in question lasted at least $t$ seconds.}
-  \label{fig:gamnhl}
-\end{figure}
-
-In the figure \ref{fig:gamnhl}, we can clearly see the spike when winning the faceoff in the moments that follows. When can also see that the confidence intervals are now much more smaller (compare to figure \ref{fig:gam}), and do not overlap between each others (at least in the first 20 seconds approximately). It also interesting to see that both curves converges 20 secondes and more after the faceoff. At some point, we can conclude that winning a faceoff does not provide an advantage that lasts forever.
+In the figure \ref{fig:gamnhl}, we can clearly see the spike when winning the faceoff in the moments that follows. When can also see that the confidence intervals are now much more smaller (compare to figure \ref{fig:gam}), and do not overlap between each others in the first 20 seconds (approximately). Then, we are able to say that the difference is significant for this time. Beyond that 20 seconds mark, we see that both curves converges and are not significantly different. At some point, we can conclude that winning a faceoff does not provide an advantage that lasts forever.
 
 AJOUTER UNE AUTRE ANALYSE (OT ou COMPARE TEAMS)
 
