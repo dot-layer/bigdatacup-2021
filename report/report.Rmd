@@ -14,41 +14,45 @@ knitr::opts_chunk$set(echo = FALSE, message=FALSE)
 
 \maketitle
 
-During the course of a hockey game, there are is a lot of faceoffs (between 50 and 75 most of the time). The outcome of these events usually dictates which team will control the puck at the beginning of a sequence. Thereby, we can say that every faceoff is important. However, many would agree that some faceoffs are more important than others. As an example, a faceoff in the offensive zone with less than a minute on the clock when trailing by one goal would appear to be quite important. In that case, we can attach the importance to the moment in the game, but if we look at it in a broader sense, does winning a faceoff contributes to scoring a goal? In this report, we try to quantify the importance of winning faceoffs, breaking it down by situation as much as possible. More precisely, we focus on the question
+During the course of a typical hockey game, between 50 and 75 faceoffs take place.
+The outcome of such events often dictates which team controls the puck at the beginning of the sequence.
+This, in itself, strongly suggests that (as the old saying goes) "every faceoff is important."
+However, we also often hear that some faceoffs are "particularly important", perhaps more important than your average faceoff.
+A coach would say that, for example, just before an offensive faceoff when his/her team is trailing by one goal with less than a minute on the clock.
+Naturally, this faceoff is 'particularly important' because the team absolutely needs a goal, and a quick one.
+Loosing the faceoff is certainly not going to help achieve that.
+In this report, we move away from this definition of "importance", which involved both the time at which the faceoff is taken and the current score.
+Instead we study the relationship between winning/loosing a faceoff and the chances that a goal occurs.
+In this sense, we judge the importance of a faceoff by the difference winning or losing it implies on the chances that a goal (for or against, depending on the context) occurs.
+In other words, we try to answer the question:
 
-> **Can we say that offensive zone faceoffs are an important aspect of offensive successes (e.g. scoring a goal), and to what extent?**
+> **What is at stake during an offensive zone faceoffs?**
 
-Towards this end, we first assess whether the data matches our intuition that winning a faceoff in the offensive zone does increase the chances of scoring a goal during the sequence that follows.
-We then take a more in-depth look at sequences, breaking them down by seconds.
+To this end, we decided to use the Erie Otters data of the [scounting dataset](https://raw.githubusercontent.com/bigdatacup/Big-Data-Cup-2021/main/hackathon_scouting.csv). 
+We chose this dataset for the simple reason that it involved the Erie Otters in each and every game, thus making it more ``balanced''.
+Indeed, in the other datasets, the teams involved do not appear the same number of times (or close to), and so this could be a source of complications when it is time to interpret the results.
+For simplicity, we define the following terms that we use throughout this analysis. 
 
-SAM-HERE
-
-As you may noticed, we focused on offensive zone faceoffs. The reason for that is we think their impact on scoring a goal is more obvious as the team is already close to the opponent net. In a way, we could also say we included defensive zone faceoffs, as it only depends from which team point of view you are looking at it. We decided to use the Erie Otters data made available in the [scounting dataset](https://raw.githubusercontent.com/bigdatacup/Big-Data-Cup-2021/main/hackathon_scouting.csv). Our rationale for using this dataset was to use the data of one single team, and not bother having teams that played different amount of games. In that context, the `scounting` dataset is the one with the most observations. For simplicity, we can define few terms we will use throughout this analysis. These abbreviations have been defined from Erie Otters point of view (\textcolor{red}{à voir si on veut garder ça}):
-
+\vspace{-0.2cm}
 \begin{center}
   \begin{multicols}{2}
       \begin{itemize}
-          \item FO: Faceoff
-          \item OZ: Erie Otters Offensive Zone
-          \item DZ: Erie Otters Defensive Zone
-          \item FO\_win: Faceoff won by Erie Otters
-          \item GF: Goal For Erie Otters
-          \item GA: Goal Against Erie Otters
+          \vspace{-0.2cm}\item FO: Faceoff
+          \vspace{-0.2cm}\item OZ: Erie Otters' offensive zone
+          \vspace{-0.2cm}\item DZ: Erie Otters' defensive zone
+          \vspace{-0.2cm}\item FO\_win: faceoff won by Erie Otters
+          \vspace{-0.2cm}\item GF: goal gor Erie Otters
+          \vspace{-0.2cm}\item GA: goal against Erie Otters
       \end{itemize}
   \end{multicols}
 \end{center}
 
-In the next sections, we are first going to analyze the data sequence-by-sequence. That way, we will be able to conclude if winning an offensive zone faceoff does have a significant impact on scoring a goal on that given sequence. Afterward, we will breakdown our sequences more in details, for example second-by-second, and see the impact of winning offensive zone faceoffs over time. We will also see if we can draw conclusions from different contexts, such as faceoffs that take place on power play/penalty killing situations or during overtime. Finally, we will see if we can draw more robust conclusions over a bigger dataset, such as multiple years of NHL data fetched using [`tidynhl`](https://jplecavalier.github.io/tidynhl/), a R package developed on top of NHL Open API.
-
-
-## What is the overall impact of winning a faceoff? {#overall}
-
+\vspace{-.5cm}
+With these in mind, we are ready to take a first look at the chosen dataset.
 ```{r import_data, cache=TRUE}
 source("../data-raw/fetch-data.R")
 source("../src/faceoffs/create-features.R")
 ```
-
-As a first step, we will try to figure out what is the overall effect of winning or loosing an offensive zone faceoff. Let's start by making sure we have a good understanding of the data we are working with. As mentioned in the introduction, we focused on the `scouting` dataset. In the table \@ref(tab:features1), we can see basic informations about this dataset, and what might be relevant to know for our analysis.
 
 ```{r features1}
 library(data.table)
@@ -76,9 +80,25 @@ knitr::kable(
 )
 ```
 
-We have `r dt_table$nb_games` games of data, with `r dt_table$nb_fo` overall faceoffs. However, only `r dt_table$nb_fo_oz_dz` faceoffs will be relevant in our case since we focus on those that happened in the offensive/defensive zones. We have `r dt_table$nb_goals` scored goals in total, but only `r dt_table$nb_goals_oz_dz` were actually scored by the team that started a sequence from their offensive zone.
+As shown in Table \@ref(tab:features1), the dataset contains `r dt_table$nb_games` games of data, with `r dt_table$nb_fo` overall faceoffs. However, only `r dt_table$nb_fo_oz_dz` faceoffs are relevant to our analysis since we restrict ourselves to sequences starting in offensive/defensive zones.
+The dataset also contains a total of `r dt_table$nb_goals` goals scored, but only `r dt_table$nb_goals_oz_dz` were actually scored by the team that started a sequence from their offensive zone. \textcolor{red}{Je montrerais les données déjà selon la perspective de Erie.}
 
-Talking about sequences, we structured the data in a way that we can easily analyze each sequence individually. To illustrate that, we added a preview (see table \@ref(tab:preview)) of what our transformed data looks like on a sequence-by-sequence basis.
+#### Organization of the report.
+The report is divided in three main parts.
+In the first part, we begin by analyzing the data sequence-by-sequence, that is, with one row per (contiguous) sequence of play.
+That way, we can first verify our intuition that winning an offensive zone faceoff increases the chances of scoring a goal (on that given sequence).
+In the second part, once it is confirmed that there is indeed some signal in the data, we perform a more in-depth analysis by looking at the data on a more granular time-scale (second-by-second at some point).
+Unfortunately, it then seems irrelevant to further precise the context in which the faceoffs are taken as the data become too sparse.
+Finally, we investigate whether more robust conclusions could be drawn from a bigger dataset constituted of multiple years of NHL data, which we fetched using [`tidynhl`](https://jplecavalier.github.io/tidynhl/), an R package developed on top of the NHL Open API.
+
+
+## The overall impact of winning a faceoff {#overall}
+
+At this point, it seems important to verify that winning the faceoff does indeed provide an advantage.
+For convenience, and because it seems the most interesting case to us, we restrict ourselves to Erie Otters' offensive faceoffs.
+To verify our intuition, we simply compare proportion of contiguous sequences (beginning with an offensive faceoff) that lead to an Erie Otters goals depending on the outcome of the faceoff.
+Before we can do that, we have to structure the data so that each row corresponds to a contiguous sequence.
+Table \@ref(tab:preview) provides a excerpt of the transformed data, which we refer to as sequence-by-sequence data.
 
 ```{r preview}
 library(kableExtra)
@@ -90,14 +110,30 @@ knitr::kable(
   align = "c",
   center = TRUE,
   position = "h",
-  caption = "Preview of our sequence-by-sequence data"
+  caption = "Excerpt of the sequence-by-sequence data"
 ) %>% 
   kable_styling(latex_options = c("striped", "scale_down"))
   
 ```
 
-In the table \@ref(tab:preview), we omitted to show some additional columns that bring contextual informations about the faceoff. The more obvious example of that is power player and penalty killing situations. In the table \@ref(tab:features2), we did breakdown the sequences by context and we also added the scoring success rate in each of these situations.
- 
+```{r glm}
+mod <- glm(formula = result_goal_for ~ faceoff_win,
+           family = binomial,
+           data = sequences[faceoff_zone == "offense"])
+
+summary <- summary(mod)
+```
+
+To get a crude idea of the impact in goal scoring of winning/loosing an offensive faceoff, we fitted a logistic regression with `GF` as response, `FO_win` as covariate and an intercept.
+In other words, we make use of the logistic function (log of the odds ratio) to model the probability that the Erie Otters score a goal conditional on the value of `FO_win` (either `FALSE` or `TRUE`).
+We obtain $\beta_{\rm FO\_win} =$ `r round(summary$coefficients[2,][1], 3)`, which suggests that winning an offensive faceoff does increase the chances to score a goal during the sequence that ensues.
+However, the associated p-value is `r round(summary$coefficients[2,][4], 3), and so there does not seem to have enough evidence to confidently make the latter statement. 
+
+\textcolor{red}{
+In Table \@ref(tab:preview), we omitted some columns that bring more context to the faceoff.
+The most obvious is the information about power play and penalty kill situations.
+In the table \@ref(tab:features2), we did breakdown the sequences by context and we also added the scoring success rate in each of these situations.}
+
 ```{r features2}
 sequences[, penalty_situation := "even"]
 sequences[team_skaters_nb > opponent_skaters_nb, penalty_situation := "pp"]
@@ -138,29 +174,20 @@ knitr::kable(
   pack_rows("Offensive", 3, 4)
 ```
 
+\textcolor{red}{JAI PAS CHECK PANTOUTE.
 A first conclusion we can draw from table \@ref(tab:features2) is that we don't have a lot of goals scored by Erie Otters (`r sum(sequences[faceoff_zone == "offense"]$result_goal_for)`) from sequences that started in their offensive zone. We will see later if it's sufficient to draw significant conclusions. However, we strongly doubt that it will be sufficient for drawing conclusions on a more granular basis, such as power play or penalty killing situations.
-
-Another thing we can notice from the table \@ref(tab:features2) is the success rate differences between sequences that started with a won or a lost faceoff. From the data we have, we can already see the effect of winning the faceoff on power play situations. For even strength contexts, the impact looks less significant (at least for Erie Otters).
-
-```{r glm}
-mod <- glm(formula = result_goal_for ~ faceoff_win,
-           family = binomial,
-           data = sequences[faceoff_zone == "offense"])
-
-summary <- summary(mod)
-```
-
-To see if the effect of winning an offensive zone faceoff is significant, we fitted a logistic regression for which we defined the variable `GF` as a target and `FO_win` as our only feature. In that specific case, we are trying to assess what is the impact of winning an offensive zone faceoff on Erie Otters probability to score a goal. From this fitted model, we got a $\beta_{FO\_win} =$ `r round(summary$coefficients[2,][1], 3)` with a p-value of `r round(summary$coefficients[2,][4], 3)`. From these numbers, we can conclude that winning an offensive zone faceoff seems to increase the chances to score a goal during the sequence that follows, but we can't say it's significant. This may be caused by a lack of data, or also by mixing up multiple types of sequences together (power play, even strength, overtime, etc).
+Another thing we can notice from the table \@ref(tab:features2) is the success rate differences between sequences that started with a won or a lost faceoff. From the data we have, we can already see the effect of winning the faceoff on power play situations. For even strength contexts, the impact looks less significant (at least for Erie Otters).}
 
 
 ## Breaking down the sequences by seconds
 So far, we have gathered *some* evidence that winning offensive faceoffs increases the chances of scoring a goal.
 Our intuition also tells us that this effect should be most prominent in the very first seconds following the faceoff and that, over time, the fact that one has won or lost the faceoff should become less relevant.
-To verify that, let us take a closer look at the times the goals in questions were scored.
-Although we do have the exact goal times (in seconds), we preferred to bin them over windows of 5 seconds.
+\textcolor{red}{EXPLAIN WHY}
+To verify that, let us take a closer look at the times the Erie goals in question were scored; for this analysis, we also look at the goals against Erie following a defensive faceoff.
+Although we do have the exact goal times (down to the second), we prefer to bin them over windows of 5 seconds for now, as it cancels out some of the noise in the data.
 
 \begin{figure}
-  \centering
+    \centering
   \includegraphics[width=.45\textwidth]{"figures/bar_off.png"}
   \qquad 
   \includegraphics[width=.45\textwidth]{"figures/bar_def.png"}
@@ -168,64 +195,65 @@ Although we do have the exact goal times (in seconds), we preferred to bin them 
   \label{fig:barcharts}
 \end{figure}
 
-Figure \ref{fig:barcharts} is encouraging: It suggests that winning an offensive faceoff (or losing a defensive faceoff) leads more often to a *quick goal*, where by *quick goal* we mean within the first five seconds of the sequence.
-However, note that no bars actually correspond to more than ZZZ goals.
-The far-right bar on the right panel, which is the tallest, corresponds to only ZZZ goals; what happens is that not many sequences reach the 175 seconds mark, just XX here in fact, so that adding or subtracting a goal can make a major difference.
-Also, for the same reason, many bars suggest a zero probability that a goal gets scored within their corresponding five-seconds window.
+Figure \ref{fig:barcharts} is encouraging: it suggests that winning an offensive faceoff (or losing a defensive faceoff) leads more often to a *quick goal*, where by *quick goal* we mean within the first five-ten seconds of the sequence.
+It also suggests that the impact of winning the faceoff in offense (green bars in the left panel, and red bars in the right panel) vanishes after approximately 20 seconds. 
+However, note that no bars actually correspond to more than ZZZ goals, and that there are some peculiarities to the data, like the fact that the bin $[45,50)$ of the offensive panel shows no goal while its neighbors are significantly different from zero.
+Such anomalies are more likely to happen in later bins, as the number of sequences that reaches 45 seconds, say, is much less that those reaching 10 seconds (\textcolor{red}{XX vs YY} in this particular case).
+While interpreting Figure \ref{fig:barcharts}, it's important to note that it provides conditional probabilities, and therefore that the numbers shown are theoretically invariant to the performance on the faceoffs themselves; although losing more faceoffs, for example, necessarily implies more data for estimating the quantities of interest for this particular situation.
 
-The sparseness in the barcharts of Figure \ref{fig:barcharts}, which is due to the lack of data points, makes it hard to interpret them.
-To overcome such difficulty, let us construct a smooth version of these latter using a generalized additive model (*gam*) and the exact seconds at which the goals were scored.
-The objective is to construct curves that provides the *risk* of a goal being scored at any time point $t$ provided that the faceoff was either won or lost; one can interpret the value given by the curve as the probability of a goal being scored within a one-second time frame.
-See the **Technical details** section at the end of the report for a more formal description of the underlying model.
+The noise in the barcharts of Figure \ref{fig:barcharts} caused by the lack of data points makes a bit it hard to interpret them.
+To overcome such difficulty, we now construct a smooth version of these latter using a generalized additive model (*gam*).
+We relegate the more formal description of the underlying model to the **Technical details** section at the end of the report.
+Basically, we wish to construct a curve that provides the *risk* of a goal being scored at any time $t$, conditional on the outcome of the faceoff.
+This *risk* can be interpreted as the probability of a goal being scored within a one-second time frame.
+To do so, we first expand the sequence-by-sequence data so that each row of the new data corresponds to a one-second window of time, much like we have done for the barcharts, but with bins of the form $[t,t+1)$ this time.
+The resulting curves are shown in Figure \ref{fig:gam}.
 
 \begin{figure}
   \centering
   \includegraphics[width=.45\textwidth]{"figures/curve_off.png"}
   \qquad 
   \includegraphics[width=.45\textwidth]{"figures/curve_def.png"}
-  \caption{Percentage of times a goal was scored within the timespan $[t,t+1)$ for $t=0,\dots,30$, given that the sequence in question lasted at least $t$ seconds.}
+  \caption{Percentage of times a goal was scored within the timespan $[t,t+1)$ for $t=0,\dots,30$, given that the sequence in question lasted at least $t$ seconds. \textcolor{red}{le nom du Y-axis me gosse}}
   \label{fig:gam}
 \end{figure}
 
-
-\begin{enumerate}
-  \item discuss results in depth --- GIVEN THAT THE SEQUENCE WAS LONGER THAN $t$.
-  \item SKIP PARAGRAPH. discuss weakness of loess: no confidence intervals for validating like we did previously.
-  \item discuss that not much data here, so possibly worthless anyways, (although CI from splines are conclusive).
-  \item discuss interesting questions that we cannot answer, need more data to use a more granular definition of situation.
-\end{enumerate}
+Since Figure \ref{fig:gam} pretty much conveys the same information as Figure \ref{fig:barcharts}, it is not surprising that is shows nice bumps right after the faceoff when this latter is won by the offensive team (Erie in the left panel, and its opponent in the right panel).
+Its continuous nature makes it easier to compare the offensive and defensive performances of Erie.
+For example, they seem to be able to limit their opponents' ability to score when they lose the faceoff in defensive zone (right panel, red curve), as their opponents' performance in similar situation (left panel, green curve) shows a much bigger bump, which corresponds to goals for Erie.
+We again note that when the advantage provided by winning an offensive faceoff seems to vanish around 20 seconds into the sequence.
+It also seems that when Erie is in defense, winning the faceoff is almost disadvantageous.
+This is most probably due to the lack of data, and the variability that ensues.
+In fact, it must be said that the results are not "significant", in the statistical sense.
+The pointwise confidence intervals associated to all four curves, also reported in \ref{fig:gam}, are very large, and so any conclusion drawn from them or from the barcharts in Figure \ref{fig:barcharts} must be taken with a grain of salt.
+Furthermore, the width of these confidence intervals strongly suggests that performing a similar analysis with a more granular definition of "situation", e.g. distinguishing even strength, powerplay and penalty kill sequences, is probably not a good idea.
 
 \medskip
 \rule{\textwidth}{1pt}
 ## Technical details
-#### Figure~(LOESS)
-Denote $Y_t \in \{0,1\}$ the random variable indicating whether a goal occurred in the interval of time $[t,t+1)$, and let $\mathbb{E}(Y_t|x)$ be the expectation of $Y_t$ (i.e., the probability of a goal occurring in that timespan) given that the most recent faceoff was lost ($x = 0$) or won ($x = 1$).
-The loess curves in Figure~(LOESS) were obtained by fitting the *generalized additive model* (gam)
+#### Figure \ref{fig:gam} and \ref{fig:gam-nhl}
+For convenience, we focus on offensive faceoffs here.
+Denote $Y_t \in \{0,1\}$ the random variable indicating whether a goal (for) occurred in the interval of time $[t,t+1)$, and let $\mathbb{E}(Y_t|x)$ be the expectation of $Y_t$ (i.e., the probability of a goal occurring in that timespan) given that the most recent faceoff was lost ($x = 0$) or won ($x = 1$).
+The curves in Figure \ref{fig:gam} were obtained by fitting the *generalized additive model* (*gam*)
 \begin{equation} \label{eq:gam1}
-  g\{\mathbb{E}(Y_t|x)\} = (1 - x) f_{0}(t) + x f_{1}(t), \qquad g(z) = \ln\{z/(1-z)\},
+  g\{\mathbb{E}(Y_t|x)\} = \beta + (1 - x) f_{0}(t^*) + x f_{1}(t^*), \qquad g(z) = \ln\{z/(1-z)\},
 \end{equation}
-where $g$ is the so-called logit function and, for both $k=0,1$,
-$f_k$ is an unknown (i.e., to be estimated) nonlinear function of $t$ that approximates $g(Y_t|x = k)$.\footnote{To fit this model, as well as all models discussed in this report, we used the \texttt{R} package \texttt{gam}. Also note that in this particular case, we actually used $t^* = \log(t+1)$ as the time variable, so as to allow less smoothing near $t=0$, where the observations are more concentrated. We also gave considerably more weight to the observations with timestamp $t=0$ to force $f_k(0) \approx 0$ ($k=0,1$).}
-The probabilities reported are obtained by solving this equation for $\mathbb{E}(Y_t|x)$ at each value of $t \in \{0,1,2,\dots\}$.
-
-
-#### Figures~(SPLINES-1) and (SPLINES-2).
-In Figure~(SPLINES-1), we reproduced the analysis involving the model in \eqref{eq:gam1}.
-This time, however, we used splines (DEF) for approximating the functions $f_0$ and $f_1$ of the gam (as opposed to the loess method previously used), which allowed us to construct confidence intervals.
-The more granular results displayed in Figure~(SPLINES-2) were also obtained by means of a splines-based gam.
-In this case, we fitted a model that included **$2 \times ZZZ = ZZZ$** nonlinear functions of $t$.
-In addition to the subscripts $k \in \{0,1\}$ indicating whether the faceoff was lost or won, we use $\ell \in \{1,\dots,ZZZ\}$ to refer to each of the **ZZZ** situations of interest (NAME THEM).
-The resulting model is given by
-\begin{equation} \label{eq:gam2}
-  g\{\mathbb{E}(Y_t|x,s)\} = \sum_{\ell=1}^{Z} \mathbbm{1}(s = \ell) \times \Big\{(1 - x) f_{0\ell}(t) + x f_{1\ell}(t)\Big\},
-\end{equation}
-where $g$ is as in \eqref{eq:gam1}.
-Note that \eqref{eq:gam2} could actually be expressed and fit as ZZZ distinct models. However, this formulation makes it clear how to include further covariates that are known to have a similar effect in multiple situations.
+where $g$ is the so-called logit function and, for both $k=0,1$, $f_k$ is an unknown (i.e., to be estimated) nonlinear function of $t^* = h(t)$ that approximates $g(Y_t|x = k)$. To fit *gam*'s, we use the function \texttt{gam} of the \texttt{R} package \texttt{mgcv}\footnote{More details. We use the \texttt{R} function \texttt{s} to estimate the functions $f_k$, $k=0,1$; in doing so, we specify the option \texttt{pc=0} to force $f_k(0) = 0$ for both $k=0,1$; see GITHUB LINK for the exact code. The package \texttt{mgcv} implements a Bayesian approach.}.
+As explained in the main text, we use $t^* = \log(t+1)$ to generate Figure \ref{fig:gam}, so as to favor less smoothing near $t=0$, where we expect a more rapidly changing curve, and more smoothing for larger values of $t$, for which less data is available.
+By design, this helps obtaining a (nearly) null risk that a goal occurs at $t = 0$, which is obviously what one would expect.
+The probabilities reported are obtained by solving this \eqref{eq:gam1} for $\mathbb{E}(Y_{t^*}|x)$ at each value of $t \in \{0,1,2,\dots\}$, using the fact that $t^* = h(t)$ for some function $h$.
+Two models, one using $t^* = log(t+1)$ and another using $t^* = t$ are shown in Figure \ref{fig:gam-nhl}.
 
 
 ## Adding more data
 
-Using the Erie Otters data available in the `scouting` dataset, we can see that winning offensive zone faceoffs has an impact, but we can't say it's statistically significant at this point. The reason we suspect is lack of data. To convinced ourselves, we redone the same kind of analysis, but using the last 2 seasons of NHL data. In that case, we used the data of all teams, as it is more equally spread across all teams. In the table \@ref(tab:nhl1)), we can see some basic informations about that NHL dataset.
+In view of our analysis of the Erie dataset, it is reasonable to think that winning offensive faceoffs does provide an advantage, but the evidence so far presented falls just short of legitimate statistical significance.
+We strongly believe that this is due to a lack of data points caused in part by the restriction to offensive faceoffs.
+Looking back at the fact that the various probabilities estimated were no greater than 0.5\% = 0.005, it would have been surprising to obtain statistically significant results with the \textcolor{red}{MM} offensive faceoffs of the Erie dataset.
+
+In order to convince ourselves that our intuition is nevertheless backed by data, we now perform a similar analysis using the 2019-2020 NHL data.\footnote{We fetched the data using \texttt{tidynhl}, an \texttt{R} package  developed on top of the NHL Open API.}
+We consider this data to be balanced, as all teams appear in it roughly the same amount of times.
+Table \@ref(tab:nhl1)) provides a basic summary of the NHL dataset.
 
 ```{r nhl1}
 seasons_to_keep <- c("2019-20", "2018-19")
@@ -237,9 +265,9 @@ dt_table <- dt_model_nhl[, .(
   max_date = as.Date(max(game_datetime)),
   nb_games = length(unique(game_datetime)),
   nb_fo = .N,
-  nb_fo_oz_dz = sum(faceoff_zone %in% c("offense", "defense")),
-  nb_goals = sum(result_goal_for) + sum(result_goal_against),
-  nb_goals_oz_dz = sum(faceoff_zone == "offense" & result_goal_for) + sum(faceoff_zone == "defense" & result_goal_against)
+  nb_fo_oz_dz = sum(faceoff_zone == "offense"),
+  nb_goals = sum(result_goal_for),
+  nb_goals_oz_dz = sum(faceoff_zone == "offense" & result_goal_for)
 )]
 
 knitr::kable(
@@ -262,41 +290,42 @@ mod_nhl <- glm(formula = result_goal_for ~ faceoff_win,
 summary_nhl <- summary(mod_nhl)
 ```
 
+It seems worthwhile pointing out that we now work with \textcolor{red}{XX} faceoffs that lead to \textcolor{red}{YY} goals.
+As we did in the first section of the report, we first fit a logistic regression with an intercept, `FO_win` as covariate, and the variable `GF` as response.
+This time, we obtained a $\beta_{FO\_win} =$ `r round(summary_nhl$coefficients[2,][1], 3)` with a p-value of `r summary_nhl$coefficients[2,][4]`.
+There is thus plenty of evidence that winning an offensive faceoff significantly increases the odds of scoring a goal during the sequences that follow.
 
-Now we have much more faceoffs, and also much more goals as well. In the same way as we did in the first section of this report, we fitted a logistic regression using the variable `FO_win` as our only feature, and the variable `GF` as a target. Using this data, we obtained a $\beta_{FO\_win} =$ `r round(summary_nhl$coefficients[2,][1], 3)` with a p-value of `r summary_nhl$coefficients[2,][4]`. Now that we have more observations, we can conclude that winning an offensive zone faceoff does increase significantly the odds to score a goal during a given sequence.
-
-On sequence-by-sequence basis, we now know that the effect is significant. Considering that, let's recreate the breakdown by seconds as we did in the previous section to see how this effect last over time. As a first step, we can look at the goals scored in time, for which we decided to use bins of 2 seconds here (as we have more data).
+We again begin the more granular analysis by constructing a barchart showing the proportion of goals (for) scored in a given time window, conditional on the outcome of the faceoff.
+The huge amount of data now allow us to use smaller bins of two seconds, that is $[t,t+2)$.
+The result is displayed on the right panel of \ref{fig:barchart-nhl}.
 
 \begin{figure}
   \centering
-  \includegraphics[width=0.8\textwidth]{"figures/bar_off_nhl.png"}
+  \includegraphics[width=.45\textwidth]{"figures/bar_off_nhl.png"}
+    \qquad 
+  \includegraphics[width=.45\textwidth]{"figures/curve_off_nlh.png"}
   \caption{Percentage of times a goal was scored within the timespan $[t,t+2)$ for $t=0,2,4,...,60$, {\bf given that the sequence in question lasted at least $t$ seconds}.}
-  \label{fig:barcharsnhl}
+  \label{fig:barchart-nhl}
 \end{figure}
 
 From the figure \ref{fig:barcharsnhl}, we can already see that the effect of winning an offensive zone faceoff is more obvious within 20 seconds after a faceoff. With this dataset, it is now more clear compared to what we had in the figure \ref{fig:barcharts}. Let's construct the smoother version of this bar chart using our gam model (see figure \ref{fig:gamnhl}).
 
-\begin{figure}
-  \centering
-  \includegraphics[width=.8\textwidth]{"figures/curve_off_nlh.png"}
-  \caption{Percentage of times a goal was scored within the timespan $[t,t+1)$ for $t=0,\dots,60$, given that the sequence in question lasted at least $t$ seconds.}
-  \label{fig:gamnhl}
-\end{figure}
-
-In the figure \ref{fig:gamnhl}, we can clearly see the spike when winning the faceoff in the moments that follows. When can also see that the confidence intervals are now much more smaller (compare to figure \ref{fig:gam}), and do not overlap between each others (at least in the first 20 seconds approximately). It also interesting to see that both curves converges 20 secondes and more after the faceoff. At some point, we can conclude that winning a faceoff does not provide an advantage that lasts forever.
+In the figure \ref{fig:gamnhl}, we can clearly see the spike when winning the faceoff in the moments that follows. When can also see that the confidence intervals are now much more smaller (compare to figure \ref{fig:gam}), and do not overlap between each others in the first 20 seconds (approximately). Then, we are able to say that the difference is significant for this time. Beyond that 20 seconds mark, we see that both curves converges and are not significantly different. At some point, we can conclude that winning a faceoff does not provide an advantage that lasts forever.
 
 AJOUTER UNE AUTRE ANALYSE (OT ou COMPARE TEAMS)
 
+\bigskip
+\bigskip
 
-## Let's wrap this up
+#### Let's wrap this up
 
 It's fair to say that most of the people that knows enough about hockey could have guessed that winning an offensive zone faceoff increases the chances to score a goal in the sequence that follows. However, this analysis allowed us to conclude few interesting things:
 
-- with enough data, we can conclude the increase is significant 
-- the effect of winning a faceoff does not lasts forever (about 20 secondes)
+- with enough data, we can conclude that the increase is statistically significant 
+- the effect of winning a faceoff does not lasts forever (about 20 seconds)
 - CONCLUSION OT or TEAMS comparisons
 
-We were able to breakdown the faceoffs in different situations, but we think it would also be interesting to explore other ideas:
+We were able to breakdown the faceoffs in different situations, but we think it would also be interesting to explore or push further other situations:
 
 - compare the effect of winning an offensive zone faceoff in power play compare to even strength
 - compare different teams together and see how the impact varies between them
