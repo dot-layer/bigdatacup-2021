@@ -15,33 +15,11 @@ library(mgcv)
 library(ggplot2)
 
 
-######
-# Data --------------------------------------------------------------------
-######
-
-if("sequences_exp" %in% ls()) rm(sequences_exp)
-
-# which years to load -- 20 means 2019-20
-seas <- 20
-filenames <- paste0("data/sequences_exp_",seas,".csv")
-sequences_exp <- rbindlist(lapply(filenames, fread))
-
-# keep a particular zone
-FO_zone <- c("offense")
-sequences_exp <- sequences_exp[faceoff_zone %in% FO_zone]
-
-# max_time variable for graphical purposes
-max_time <- 75
-
-
 ############
 # Bar charts --------------------------------------------------------------
 ############
 
-bin_width <- 2
-sqo <- sequences_exp[time_since_faceoff < max_time, .(goal_for_scored = sum(goal_for_scored), N = .N), .(time_since_faceoff, faceoff_won)]
-sqo[, bin := as.integer(floor(time_since_faceoff/bin_width)*bin_width) + bin_width/2]
-sqo <- sqo[, .(y = sum(goal_for_scored)/sum(N)*100), .(bin, faceoff_won)]
+sqo <- fread("src/faceoffs/objects/bin_off_nhl.csv")
 
 ggplot(sqo,
              aes(x = bin, y = y, fill = faceoff_won)) +
@@ -57,10 +35,11 @@ ggplot(sqo,
 
 
 
-#########################
-# Results for mod_off_nhl -------------------------------------------------
-#########################
-mod <- readRDS("src/faceoffs/objects/mod_off_nhl.rds")
+#############################
+# Results for mod_weights_nhl ---------------------------------------------
+#############################
+
+mod <- readRDS("src/faceoffs/objects/mod_weights_nhl.rds")
 t_max <- max(sequences_exp$time_since_faceoff)
 res_table <- data.table(faceoff_won = rep(c(FALSE,TRUE), each = t_max+1),
                         time_since_faceoff = 0:t_max,
@@ -92,11 +71,12 @@ ggplot(sqo,
 
 
 
-##########################################
-# Results for mod_bump_nhl and mod_seq_nhl --------------------------------
-##########################################
+################################################
+# Results for mod_final_nhl and mod_obsolete_nhl --------------------------
+################################################
 
-res_tables <- readRDS("src/faceoffs/objects/res_tables.rds")
+res_final <- fread("src/faceoffs/objects/res_final.csv")
+res_obsolete <- fread("src/faceoffs/objects/res_obsolete.csv")
 
 ggplot(sqo,
        aes(x = bin, y = y, fill = faceoff_won)) +
@@ -111,14 +91,14 @@ ggplot(sqo,
   # geom_line(data = res_table, aes(x=time_since_faceoff, y=100*mean, col=faceoff_won)) +
   # geom_ribbon(data = res_table, aes(x=time_since_faceoff, y=100*mean,
   #                                   ymin = 100*lower, ymax = 100*upper, fill=faceoff_won), alpha=0.15, col=NA) +
-  geom_line(data=res_tables[[1]],
+  geom_line(data=res_final,
             aes(x=time_since_faceoff, y=100*mean, col=faceoff_won, linetype = time_variable)) +
-  geom_ribbon(data=res_tables[[1]],
+  geom_ribbon(data=res_final,
               aes(x=time_since_faceoff, y=100*mean, ymin = 100*lower, ymax = 100*upper, fill=faceoff_won),
               alpha=0.15, col=NA) +
-  geom_line(data=res_tables[[2]],
+  geom_line(data=res_obsolete,
             aes(x=time_since_faceoff, y=100*mean, col=faceoff_won, linetype = time_variable), alpha = .5) +
-  geom_ribbon(data=res_tables[[2]],
+  geom_ribbon(data=res_obsolete,
             aes(x=time_since_faceoff, y=100*mean, ymin = 100*lower, ymax = 100*upper, fill=faceoff_won),
             alpha=0.15, col=NA) +
 facet_wrap(time_variable ~ faceoff_won)
