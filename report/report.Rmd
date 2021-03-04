@@ -296,7 +296,12 @@ From the Figure \ref{fig:barchart-nhl}, we can see better the effect of winning 
 
 In the Figure \ref{fig:barchart-nhl}, we can see again the bump when winning the faceoff in the moments that follows. When can also see that the confidence intervals are now much more smaller (compare to Figure \ref{fig:gam}), and do not overlap between each others in the first 20 seconds (approximately). Then, we are able to say that the difference is significant for this time. Beyond that 20 seconds mark, we see that both curves converges and are not significantly different. At some point, we can conclude that winning a faceoff does not provide an advantage that lasts forever.
 
-AJOUTER UNE AUTRE ANALYSE (OT ou COMPARE TEAMS)
+Now that we understand the effect of winning offensive faceoffs, we can ask ourselves, is this effect the same among all teams? To compare the different teams against each others, we focused on the so called "bump" that we see after winning (or loosing) a faceoff. To take into account both the offense and the defense, we compare the heights of both bumps (offensive and defensive) for all teams. The offensive bump can be interpreted as the ability to score a goal after a won offensive faceoff while the defensive bump can be interpreted as the ability to contain the opponent after a lost faceoff. In the Figure XX, we can see the offense on the x axis, and the defense on the y axis. In the best scenario, a team would prefer to have a high bump on offense and a small bump on defense (which corresponds to the bottom right corner).
+
+FIGURE XXX
+
+ANALYSE DE LA FIGURE
+
 
 \bigskip
 \bigskip
@@ -307,12 +312,12 @@ It's fair to say that most of the people watched enough hockey games could have 
 
 - with enough data, we can conclude that the increase is statistically significant 
 - the effect of winning a faceoff does not lasts forever (about 20 seconds)
-- CONCLUSION OT or TEAMS comparisons
+- COMPARAISON DES ÉQUIPES (CONCLUSION)
 
 We were able to breakdown the faceoffs in different situations, but we think it would also be interesting to explore or push further other situations:
 
 - compare the effect of winning an offensive zone faceoff in power play compare to even strength
-- compare different teams together and see how the impact varies between them
+- AUTRE OUVERTURE
 
 
 \medskip
