@@ -238,7 +238,7 @@ The resulting curves are shown in Figure \ref{fig:gam}.
 
 Since Figure \ref{fig:gam} pretty much conveys the same information as Figure \ref{fig:barcharts}, it is not surprising that is shows nice bumps right after the faceoff when this latter is won by the offensive team (Erie in the left panel, and its opponent in the right panel).
 Its continuous nature makes it easier to compare the offensive and defensive performances of Erie.
-For example, they seem to be able to limit their opponents' ability to score when they loose the faceoff in defensive zone (right panel, red curve), as their opponents' performance in similar situation (left panel, green curve) shows a much bigger bump, which corresponds to goals for Erie.
+For example, they seem to be able to limit their opponents' ability to score when they lose the faceoff in defensive zone (right panel, red curve), as their opponents' performance in similar situation (left panel, green curve) shows a much bigger bump, which corresponds to goals for Erie.
 We again note that the advantage provided by winning an offensive faceoff seems to vanish around 20 seconds into the sequence.
 It also seems that when Erie is in defense, winning the faceoff is almost disadvantageous.
 This is most probably due to the lack of data, and the variability that ensues.
