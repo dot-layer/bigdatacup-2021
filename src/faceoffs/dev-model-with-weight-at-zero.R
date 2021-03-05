@@ -49,7 +49,7 @@ gg <- ggplot(sqo,
   ylab("goals/sequences (%)") +
   geom_col(alpha = .9, position = "dodge", col="gray15")
 gg
-ggsave("report/figures/bar_off_nhl.png", gg, "png", width=4.5, height=3, units="in")
+# ggsave("report/figures/bar_off_nhl.png", gg, "png", width=4.5, height=3, units="in")
 
 
 ######################
@@ -70,7 +70,7 @@ mod <- gam(formula = goal_for_scored ~ s(time_since_faceoff, by = faceoff_won, p
            weights = 1 + 100*(sequences_exp$time_since_faceoff == 0),
            family = binomial(),
            data = sequences_exp)
-saveRDS(mod, "src/faceoffs/objects/mod_off_nhl.rds")
+saveRDS(mod, "src/faceoffs/objects/mod_weights_nhl.rds")
 
 # diagnostics
 plot(mod)

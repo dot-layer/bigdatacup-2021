@@ -22,7 +22,7 @@ expandSequence <- function(sequence, seq_id = NULL){
   seq_dt[, faceoff_zone := sequence$faceoff_zone]
   
   # faceoff won
-  seq_dt[, faceoff_won := as.factor(sequence$faceoff_win)]
+  seq_dt[, faceoff_won := factor(sequence$faceoff_win, levels = c(FALSE, TRUE))]
   
   return(seq_dt)
 }
