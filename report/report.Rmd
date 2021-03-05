@@ -110,7 +110,8 @@ knitr::kable(
   align = "c",
   center = TRUE,
   position = "h",
-  caption = "Excerpt of the sequence-by-sequence data"
+  caption = "Excerpt of the sequence-by-sequence data",
+  linesep = ""
 ) %>% 
   kable_styling(latex_options = c("striped", "scale_down"))
   
