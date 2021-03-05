@@ -11,8 +11,8 @@
 
 
 # DO YOU WANT TO SAVE THE FIGURES GENERATED?
-# save_figures <- T
-save_figures <- F
+save_figures <- T
+# save_figures <- F
 
 
 ##########
@@ -63,16 +63,17 @@ sqo <- fread("src/faceoffs/objects/bin_off_nhl.csv")
 
 gg <- ggplot(sqo,
              aes(x = bin, y = y, fill = faceoff_won)) +
-  ggtitle("Goal for rate following offensive faceoff") +
-  theme_light() +
-  theme(legend.position = c(.8,.8), legend.title = element_blank(), panel.grid.minor = element_blank()) +
+  ggtitle("Goal for rate following offensive faceoffs") +
+  theme_light(base_size = 7) +
+  theme(legend.position = c(.875,.875), legend.title = element_blank(), legend.background = element_rect(fill = "transparent"), panel.grid.minor = element_blank(),
+        legend.key.size = unit(.75,"line")) +
   scale_fill_manual(labels = c("FO lost", "FO won"), values = c("red", "green")) +
   coord_cartesian(xlim = c(-1,max_time+1), ylim = c(0,.35)) +
   xlab("time elapsed since faceoff") +
-  ylab("goals/sequences (%)") +
-  geom_col(alpha = .9, position = "dodge", col="gray15")
+  ylab("goal for rate (%)") +
+  geom_col(alpha = .9, position = "dodge", col="gray15", size = .25)
 gg
-if(save_figures) ggsave("report/figures/bar_off_nhl.png", gg, "png", width=4.5, height=3, units="in")
+if(save_figures) ggsave("report/figures/bar_off_nhl.png", gg, "png", width=3, height=2, units="in", dpi = 320)
 
 
 ######################
@@ -137,24 +138,25 @@ res_final <- fread("src/faceoffs/objects/res_final.csv")
 res_obsolete <- fread("src/faceoffs/objects/res_obsolete.csv")
 
 gg <- ggplot() +
-  theme_light() +
-  ggtitle("Goal for rate following offensive faceoff") +
-  theme(legend.position = c(.65,.8), legend.box = "horizontal", panel.grid.minor = element_blank()) +
-  scale_color_manual(name = "FO outcome", labels = c("lost", "won"), values = c("red", "green")) +
-  scale_fill_manual(name = "FO outcome",labels = c("lost", "won"), values = c("red", "green")) +
-  scale_linetype_manual(name = "Time variable (t*)",labels = c("log(t+1)", "t"), values = c(1, 2)) +
+  theme_light(base_size = 7) +
+  ggtitle("Goal for rate following offensive faceoffs") +
+  theme(legend.position = c(.8,.8), legend.title = element_blank(), legend.box = "horizontal", legend.background = element_rect(fill = "transparent"), panel.grid.minor = element_blank()) +
+  guides(linetype = FALSE) +
+  scale_color_manual(labels = c("FO lost", "FO won"), values = c("red", "green")) +
+  scale_fill_manual(labels = c("FO lost", "FO won"), values = c("red", "green")) +
+  # scale_linetype_manual(name = "Time variable (t*)",labels = c("log(t+1)", "t"), values = c(1, 2)) +
   coord_cartesian(xlim = c(0,max_time), ylim = c(0,.35)) +
   xlab("time elapsed since faceoff") +
-  ylab("goals/sequences (%)") +
+  ylab("model-based goal for rate (%)") +
   geom_line(data=res_final,
-            aes(x=time_since_faceoff, y=100*mean, col=faceoff_won, linetype = time_variable)) +
+            aes(x=time_since_faceoff, y=100*mean, col=faceoff_won, linetype = time_variable), size=.35) +
   geom_ribbon(data=res_final,
               aes(x=time_since_faceoff, y=100*mean, ymin = 100*lower, ymax = 100*upper, fill=faceoff_won),
               alpha=0.15, col=NA) +
   geom_line(data=res_obsolete,
-            aes(x=time_since_faceoff, y=100*mean, col=faceoff_won, linetype = time_variable), alpha = .5)# +
+            aes(x=time_since_faceoff, y=100*mean, col=faceoff_won, linetype = time_variable), size=.35, alpha = .5)# +
   # geom_ribbon(data=res_obsolete,
   #             aes(x=time_since_faceoff, y=100*mean, ymin = 100*lower, ymax = 100*upper, fill=faceoff_won),
   #             alpha=0.15, col=NA)
 gg
-if(save_figures) ggsave("report/figures/curve_off_nlh.png", gg, "png", width=4.5, height=3, units="in")
+if(save_figures) ggsave("report/figures/curve_off_nhl.png", gg, "png", width=3, height=2, units="in", dpi=320)
