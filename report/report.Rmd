@@ -14,41 +14,28 @@ knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 
 \maketitle
 
-During the course of a typical hockey game, between 50 and 75 faceoffs take place.
-The outcome of such events often dictates which team controls the puck at the beginning of the sequence.
-This, in itself, strongly suggests that (as the old saying goes) "every faceoff is important."
-However, we also often hear that some faceoffs are "particularly important", perhaps more important than your average faceoff.
-A coach would say that, for example, just before an offensive faceoff when his/her team is trailing by one goal with less than a minute on the clock.
-Naturally, this faceoff is 'particularly important' because the team absolutely needs a goal, and a quick one.
-Loosing the faceoff is certainly not going to help achieve that.
-In this report, we move away from this definition of "importance", which involved both the time at which the faceoff is taken and the current score.
-Instead we study the relationship between winning/loosing a faceoff and the chances that a goal occurs.
-In this sense, we judge the importance of a faceoff by the difference winning or losing it implies on the chances that a goal (for or against, depending on the context) occurs.
-In other words, we try to answer the question:
+Over the course of a typical hockey game, one could expect that around 50 to 75 faceoffs will be contested.
+The outcome is often meaningful in determining which team will first dictate the play in the upcoming sequence.
+This obvious statement is probably enough to suggest that (as the old saying goes) each and every faceoff is important in a hockey game.
+The main objective of this study is to quantify how. In other words, in leveraging the data at our disposal, we will try to answer the following question:
 
-> **What is at stake during an offensive zone faceoffs?**
+> **What is at stake when the linesman drop the puck?**
 
-To this end, we decided to use the Erie Otters data of the [scounting dataset](https://raw.githubusercontent.com/bigdatacup/Big-Data-Cup-2021/main/hackathon_scouting.csv). 
-We chose this dataset for the simple reason that it involved the Erie Otters in each and every game, thus making it more ``balanced''.
-Indeed, in the other datasets, the teams involved do not appear the same number of times (or close to), and so this could be a source of complications when it is time to interpret the results.
-For simplicity, we define the following terms that we use throughout this analysis. 
+It is reasonable to assume that the answer may vary significantly depending on the context in which a particular faceoff occurs.
+One could possibly come with some intuitive factors that may have an impact on the criticalness of winning a given faceoff.
+A non-exhaustive list may include elements such as the current score, the time remaining on the clock, the zone in which the faceoff is taken, or the strength of play (e.g. power play).
+Others will argue that — even though there is not a single coach who overlooks the importance of winning faceoffs — some game plans are merely better to make the most of an offensive zone faceoff win while others are more effective to salvage a loss in the defensive zone.
 
-\vspace{-0.2cm}
-\begin{center}
-  \begin{multicols}{2}
-      \begin{itemize}
-          \vspace{-0.2cm}\item FO: Faceoff
-          \vspace{-0.2cm}\item OZ: Erie Otters' offensive zone
-          \vspace{-0.2cm}\item DZ: Erie Otters' defensive zone
-          \vspace{-0.2cm}\item FO\_win: faceoff won by Erie Otters
-          \vspace{-0.2cm}\item GF: goal gor Erie Otters
-          \vspace{-0.2cm}\item GA: goal against Erie Otters
-      \end{itemize}
-  \end{multicols}
-\end{center}
+The first step in answering such a question objectively is to define a reliable metric to help us guide our reasoning, and eventually come up with conclusive statements.
+For the purposes of this study, we will evaluate how the outcome of a faceoff affects the likelihood of scoring or allowing a goal on the ensuing sequence.
 
-\vspace{-.5cm}
-With these in mind, we are ready to take a first look at the chosen dataset.
+To this end, we made the decision to only focus on the [scouting dataset](https://raw.githubusercontent.com/bigdatacup/Big-Data-Cup-2021/main/hackathon_scouting.csv) since we wanted to have relatively homogeneous data.
+Indeed, mixing different leagues may have had introduced noise coming from the different realities among those leagues.
+Furthermore, since every games in the data highlight the Erie Otters, we will be creating models in the perspective of this particular team.
+It would be somewhat inappropriate to build a model with such asymetrical data and claim that it represents the reality for the whole OHL.
+
+With these in mind, let's give a first look at the data.
+
 ```{r import_data, cache=TRUE}
 source("../data-raw/fetch-data.R")
 source("../src/faceoffs/create-features.R")
