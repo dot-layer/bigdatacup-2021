@@ -9,7 +9,7 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, message=FALSE)
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 ```
 
 \maketitle
@@ -135,43 +135,73 @@ The most obvious is the information about power play and penalty kill situations
 In the table \@ref(tab:features2), we did breakdown the sequences by context and we also added the scoring success rate in each of these situations.}
 
 ```{r features2}
-sequences[, penalty_situation := "even"]
-sequences[team_skaters_nb > opponent_skaters_nb, penalty_situation := "pp"]
-sequences[team_skaters_nb < opponent_skaters_nb, penalty_situation := "pk"]
+sequences[, goal_strength := "even"]
+sequences[team_skaters_nb > opponent_skaters_nb, goal_strength := "pp"]
+sequences[team_skaters_nb < opponent_skaters_nb, goal_strength := "pk"]
 
-test <- sequences[faceoff_zone %in% c("offense", "defense"), .(
-  nb_fo = .N,
-  nb_goals_for = sum(result_goal_for),
-  nb_goals_against = sum(result_goal_against)
-), by = .(faceoff_zone, faceoff_win, penalty_situation)]
+sequences[faceoff_zone %in% c("blue_offense", "red", "blue_defense"), faceoff_zone := "neutral"]
 
+table_cells <- function(goal, zone, strength) {
+  
+  goal <- paste0("result_goal_", goal)
+  summary <- sequences[goal_strength == strength & faceoff_zone == zone, .N, c("faceoff_win", goal)]
+  setorderv(summary, c("faceoff_win", goal), c(-1, 1))
+  
+  row_1 <- summary[, .(N = sum(N)), .(faceoff_win)][, N]
+  row_2 <- summary[get(goal) == TRUE, N]
+  row_3 <- row_2 / row_1
+  
+  row_1 <- as.character(row_1)
+  row_2 <- as.character(row_2)
+  row_3 <- paste0(as.character(round(row_3 * 100)), "%")
+  
+  as.matrix(rbindlist(list(
+    list(W = row_1[1], L = row_1[2]),
+    list(W = row_2[1], L = row_2[2]),
+    list(W = row_3[1], L = row_3[2])
+  )))
+  
+}
 
-test[faceoff_zone == "defense", gf_ga := nb_goals_against]
-test[faceoff_zone == "offense", gf_ga := nb_goals_for]
-test[, c("nb_goals_for", "nb_goals_against") := NULL]
-
-test[, succes_rate := paste(round(100*gf_ga/nb_fo, 1), "%")]
-
-test[faceoff_win == TRUE, faceoff_win_label := "FO won"]
-test[faceoff_win == FALSE, faceoff_win_label := "FO lost"]
-
-test2 <- dcast(test, faceoff_zone + faceoff_win_label ~ penalty_situation, value.var = c("nb_fo", "gf_ga", "succes_rate"), drop = F)
-setcolorder(test2, neworder = c("faceoff_zone", "faceoff_win_label", "nb_fo_pk", "gf_ga_pk", "succes_rate_pk", "nb_fo_even", "gf_ga_even", "succes_rate_even", "nb_fo_pp", "gf_ga_pp", "succes_rate_pp"))
-test2[, faceoff_zone := NULL]
+contextual_data <- cbind(
+  rep(c("PK", "Even", "PP"), each = 3L),
+  rep(c("Sequence", "Goal", "Rate"), 3L),
+  rbind(
+    table_cells("against", "defense", "pk"),
+    table_cells("against", "defense", "even"),
+    matrix(rep("", 6L), ncol = 2L)
+  ),
+  rbind(
+    matrix(rep("", 6L), ncol = 2L),
+    table_cells("against", "neutral", "even"),
+    matrix(rep("", 6L), ncol = 2L)
+  ),
+  rbind(
+    matrix(rep("", 6L), ncol = 2L),
+    table_cells("for", "neutral", "even"),
+    matrix(rep("", 6L), ncol = 2L)
+  ),
+  rbind(
+    matrix(rep("", 6L), ncol = 2L),
+    table_cells("for", "offense", "even"),
+    table_cells("for", "offense", "pp")
+  )
+)
 
 knitr::kable(
-  x = test2,
+  x = contextual_data,
   format = "latex",
-  position = "h",
-  booktabs = T,
-  col.names = c("Zone", rep(c("FOs", "Goals", "% success"), 3)),
+  position = "H",
+  caption = "Contextual data for faceoff situations",
+  booktabs = TRUE,
   align = "c",
-  center = TRUE,
-  caption = "Contextual data for faceoff situations"
-) %>% 
-  add_header_above(c(" " = 1, "Penalty kill" = 3, "Even strength" = 3, "Powerplay" = 3)) %>% 
-  pack_rows("Defensive", 1, 2) %>%
-  pack_rows("Offensive", 3, 4)
+  col.names = c("", "Faceoff", rep(c("Won", "Lost"), 4L))
+) %>%
+  column_spec(1L, bold = TRUE) %>%
+  collapse_rows(columns = 1L, latex_hline = "major", valign = "middle") %>%
+  add_header_above(c(" " = 2, "Defense" = 2, "Neutral" = 2, "Neutral" = 2, "Offense" = 2)) %>%
+  add_header_above(c(" " = 2, "Goal Against" = 4, "Goal For" = 4), bold = TRUE) %>%
+  column_spec(3:10, width = "1cm")
 ```
 
 \textcolor{red}{JAI PAS CHECK PANTOUTE.
