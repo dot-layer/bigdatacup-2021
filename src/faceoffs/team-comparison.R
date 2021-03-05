@@ -17,6 +17,7 @@
 
 library(data.table)
 library(ggplot2)
+library(ggrepel)
 library(mgcv)
 
 
@@ -80,9 +81,9 @@ ggplot() +
   theme_light() +
   theme(legend.position = "none", legend.title = element_blank(), panel.grid.minor = element_blank()) +
   ylab("goals/sequences (%)") +
-  geom_col(data = seq_bin[bin == 10 & faceoff_won == T],
+  geom_col(data = seq_bin[bin == 10 & faceoff_won == T & faceoff_zone == "offense"],
            aes(x = team_abbreviation, y = prop_for), fill = "green", alpha = .25, col="gray15") +
-  geom_col(data = seq_bin[bin == 10 & faceoff_won == F],
+  geom_col(data = seq_bin[bin == 10 & faceoff_won == F & faceoff_zone == "defense"],
            aes(x = team_abbreviation, y = -prop_against), fill = "red", alpha = .25, col="gray15")
 
 
@@ -91,25 +92,31 @@ ggplot() +
 ##########
 # X-Y plot ----------------------------------------------------------------
 ##########
+ran <- range(c(range(100*seq_bin[bin==10]$prop_for, na.rm=T),
+               range(100*seq_bin[bin==10]$prop_against, na.rm=T))) + c(-.01,.01)
 
-gg <- ggplot(seq_bin[,.(prop_for = sum(prop_for, na.rm = T),
+gg <- ggplot(seq_bin[bin == 10,.(prop_for = sum(prop_for, na.rm = T),
                   prop_against = sum(prop_against, na.rm = T)),
                .(team_abbreviation)],
-       aes(y = 100*prop_for, x = 100*prop_against)) +
-  ggtitle("Goal for rate (OZ) vs goal against rate (DZ) for the 2019-20 season") +
-  geom_point(size=.5) +
+       aes(x = 100*prop_for, y = 100*prop_against)) +
+  ggtitle("GF rate (OZ) vs GA rate (DZ) for the NHL 2019-20 season") +
+  geom_point(size=.35, color="blue", alpha=.35) +
+  geom_text_repel(aes(label=team_abbreviation), size=1.75, min.segment.length = .05,
+                  segment.size = .05, segment.color="blue", segment.alpha=.5) +
   theme_light(base_size = 6) +
   theme(panel.grid.minor = element_blank()) +
-  ylab("goal for rate (%) following offensive faceoffs") +
-  xlab("goal against rate (%) following defensive faceoffs") +
-  scale_x_continuous(breaks = seq(0,2,.5)) +
-  scale_y_continuous(breaks = seq(0,2,.5))
+  xlab("goal for rate (%) following offensive faceoffs") +
+  ylab("goal against rate (%) following defensive faceoffs") +
+  scale_x_continuous(breaks = seq(0,.25,.05), limits = ran) +
+  scale_y_continuous(breaks = seq(0,.25,.05), limits = ran)
 gg
-diff(range(seq_bin$prop_for, na.rm=T))
-diff(range(seq_bin$prop_against, na.rm=T))
+range(100*seq_bin[bin==10]$prop_for, na.rm=T)
+diff(range(seq_bin[bin==10]$prop_for, na.rm=T))
+range(100*seq_bin[bin==10]$prop_against, na.rm=T)
+diff(range(seq_bin[bin==10]$prop_against, na.rm=T))
 
+ggsave("report/figures/xy_nhl.png", gg, "png", width=3, height=2.8, units="in", dpi=320)
 #
-ggsave("report/figures/xy_nhl.png", gg, "png", width=3.75, height=2, units="in", dpi=320)
 
 
 
@@ -169,7 +176,7 @@ fwrite(res, "src/faceoffs/objects/res_BOS_BUF.csv")
 # Vul ---------------------------------------------------------------------
 #####
 res <- fread("src/faceoffs/objects/res_BOS_BUF.csv")
-max_time <- 40
+max_time <- 60
 
 ggplot(res[team_abbreviation == "BOS" & faceoff_zone == "offense" & faceoff_won == T], aes(x = time_since_faceoff, y=100*mean)) + geom_line()
 ggplot(res[team_abbreviation == "BUF" & faceoff_zone == "offense" & faceoff_won == T], aes(x = time_since_faceoff, y=100*mean)) + geom_line()
@@ -193,10 +200,10 @@ gg <- ggplot() +
   geom_line(data=res[faceoff_zone == "defense" & faceoff_won == F], aes(x=time_since_faceoff, y=-100*mean, col=team_abbreviation), size = .35) +
   geom_ribbon(data=res[faceoff_zone == "defense" & faceoff_won == F], aes(x=time_since_faceoff, y= -100*mean,
                                                                           ymin = -100*lower, ymax = -100*upper, fill=team_abbreviation), alpha=0.075, col=NA)+
-  geom_abline(slope=0, intercept = 0, col="blue", linetype = 2, size = .35)
+  geom_abline(slope=0, intercept = 0, col="black", linetype = 3, size = .25)
 
 gg
-ggsave("report/figures/curve_BOS_BUF.png", gg, "png", width=2, height=2, units="in", dpi=320)
+ggsave("report/figures/curve_BOS_BUF.png", gg, "png", width=3, height=2.8, units="in", dpi=320)
 
 
 
