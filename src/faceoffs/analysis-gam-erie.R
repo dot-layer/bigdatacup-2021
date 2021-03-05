@@ -90,7 +90,7 @@ if(save_figures) ggsave("report/figures/bar_def.png", gg, "png", width=3, height
 # Fit model -- offense ----------------------------------------------------
 ######################
 
-mod_off <- gam(formula = goal_for_scored ~ s(log(time_since_faceoff+1), by = faceoff_won, pc = 0),
+mod_off <- gam(formula = goal_for_scored ~ s(log(time_since_faceoff+1.5), by = faceoff_won, pc = 0),
                family = binomial(),
                data = sequences_exp_off)
 
@@ -127,8 +127,8 @@ if(save_figures) ggsave("report/figures/curve_off.png", gg, "png", width=3, heig
 # Fit model -- defense ----------------------------------------------------
 ######################
 
-mod_def <- gam(formula = goal_against_scored ~ s(log(time_since_faceoff + 1), by = faceoff_won, pc = 0),
-               weight = 1 + 2*(sequences_exp_def$time_since_faceoff == 0),
+mod_def <- gam(formula = goal_against_scored ~ s(log(time_since_faceoff + 1.5), by = faceoff_won, pc = 0),
+               weight = 1 + 2*(sequences_exp_def$time_since_faceoff==2),
                family = binomial(),
                data = sequences_exp_def)
 
