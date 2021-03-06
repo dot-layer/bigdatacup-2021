@@ -197,10 +197,11 @@ A first conclusion we can draw from table \@ref(tab:features2) is that we don't 
 Another thing we can notice from the table \@ref(tab:features2) is the success rate differences between sequences that started with a won or a lost faceoff. From the data we have, we can already see the effect of winning the faceoff on power play situations. For even strength contexts, the impact looks less significant (at least for Erie Otters).}
 
 
-## Breaking down the sequences by seconds
-So far, we have gathered *some* evidence that winning offensive faceoffs increases the chances of scoring a goal.
-Our intuition also tells us that this effect should be most prominent in the very first seconds following the faceoff and that, over time, the fact that one has won or lost the faceoff should become less relevant.
-As a matter of fact, the team that wins an offensive faceoff might get a quick shot from the point or set up a play that leads to an immediate scoring chance. 
+## Breaking down offensive/defensive zone faceoffs to the second
+We now take a more detailed look at sequences following an offensive zone faceoff.
+We have already gathered some evidence that winning such faceoffs increases the chances of scoring a goal.
+Experience also tells us that winning an offensive faceoff cleanly "often" leads to a quick shot from the point or, more generally, to a scoring chance of some sort.
+It is therefore intuitive to think that the (quantified) effect of winning an offensive faceoff should be most prominent in the very first seconds following the faceoff and that it should then become less and less relevant over time, may the sequence goes on for a while.
 To verify that, let us take a closer look at the times the Erie goals in question were scored; for this analysis, we also look at the goals against Erie following a defensive faceoff.
 Although we do have the exact goal times (down to the second), we prefer to bin them over windows of 5 seconds for now, as it cancels out some of the noise in the data.
 
@@ -209,7 +210,7 @@ Although we do have the exact goal times (down to the second), we prefer to bin 
   \includegraphics[]{"figures/bar_off.png"}
   \qquad 
   \includegraphics[]{"figures/bar_def.png"}
-  \caption{Percentage of times a goal was scored within the timespan $[t,t+5)$ for $t=0,5,10,...,175$, {\bf given that the sequence in question lasted at least $t$ seconds}.}
+  \caption{Percentage of times a goal was scored within the time window $[t,t+5)$ following the faceoff, {\bf given that the sequence in question lasted at least $t$ seconds}. The left panel is based on goals for Erie following offensive zone faceoffs, while the right panel is based on goals against Erie following defensive zone faceoffs. The data was collected during the 2019-20 season.}
   \label{fig:barcharts}
 \end{figure}
 
@@ -232,7 +233,7 @@ The resulting curves are shown in Figure \ref{fig:gam}.
   \includegraphics[]{"figures/curve_off.png"}
   \qquad 
   \includegraphics[]{"figures/curve_def.png"}
-  \caption{Percentage of times a goal was scored within the timespan $[t,t+1)$ for $t=0,\dots,30$, given that the sequence in question lasted at least $t$ seconds. \textcolor{red}{le nom du Y-axis me gosse}}
+  \caption{Model-based Erie's goal rates for time windows of the form $[t,t+1)$, \textbf{given that the sequence in question lasted at least $t$ seconds.} The left panel covers goals for following offensive zone faceoffs, while the right panel covers goals against following defensive zone faceoffs. The data was collected during the 2019-20 season.}
   \label{fig:gam}
 \end{figure}
 
@@ -247,10 +248,9 @@ The pointwise confidence intervals associated to all four curves, also reported 
 Furthermore, the width of these confidence intervals strongly suggests that performing a similar analysis with a more granular definition of "situation", e.g. distinguishing even strength, powerplay and penalty kill sequences, is probably not a good idea.
 
 
-## Adding more data
+## Going bigger
 
-In view of our analysis of the Erie dataset, it is reasonable to think that winning offensive faceoffs does provide an advantage, but the evidence so far presented falls just short of legitimate statistical significance.
-We strongly believe that this is due to a lack of data points caused in part by the restriction to offensive faceoffs.
+In view of our analysis of the Erie dataset, it seems more than reasonable to think that winning offensive faceoffs does increase one's chances of scoring a goal.
 Looking back at the fact that the various probabilities estimated were no greater than 0.5\% = 0.005, it would have been surprising to obtain statistically significant results with the `r dt_table$nb_fo_oz_dz` offensive faceoffs of the Erie dataset.
 
 In order to convince ourselves that our intuition is nevertheless backed by data, we now perform a similar analysis using the 2019-2020 NHL data.\footnote{We fetched the data using \texttt{tidynhl}, an \texttt{R} package  developed on top of the NHL Open API.}
@@ -306,7 +306,7 @@ The result is displayed on the right panel of Figure \ref{fig:barchart-nhl}.
   \includegraphics[]{"figures/bar_off_nhl.png"}
     \qquad 
   \includegraphics[]{"figures/curve_off_nhl.png"}
-  \caption{Percentage of times a goal was scored within the timespan $[t,t+2)$ for $t=0,2,4,...,60$, {\bf given that the sequence in question lasted at least $t$ seconds}.}
+  \caption{Right panel: Percentage of times a goal was scored within the time window $[t,t+2)$ following offensive zone faceoffs. Left panel: Model-based goal for rates for time windows of the form $[t,t+1)$. All quantities are {\bf conditional on the fact that the sequence in question lasted at least $t$ seconds.} The results are averaged over the data from all NHL teams collected during the 2019-20 season. The dotted line on the right panel shows the results from an alternative model discussed in the *Technical details* section.}
   \label{fig:barchart-nhl}
 \end{figure}
 
@@ -337,7 +337,7 @@ It's fair to say that most of the people watched enough hockey games could have 
   \includegraphics[]{"figures/xy_nhl.png"}
   \qquad 
   \includegraphics[]{"figures/curve_BOS_BUF.png"}
-  \caption{Percentage of times a goal was scored within the timespan $[t,t+1)$ for $t=0,\dots,30$, given that the sequence in question lasted at least $t$ seconds. \textcolor{red}{le nom du Y-axis me gosse}}
+  \caption{Model-based goal rates for windows of the form $[t,t+1)$, \textbf{given that the sequence in question lasted at least $t$ seconds.} The left panel concerns goals for Erie following offensive zone faceoffs, while the right panel concerns goals against Erie following defensive zone faceoffs. The data was collected during the XXXX season.}
   \label{fig:gam}
 \end{figure}
 

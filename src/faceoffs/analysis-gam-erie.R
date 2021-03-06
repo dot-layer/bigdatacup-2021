@@ -60,6 +60,7 @@ gg <- ggplot(sequences_exp_off[time_since_faceoff < max_time,
   coord_cartesian(xlim = c(0,max_time), ylim = c(0,.45)) +
   xlab("time elapsed since faceoff") +
   ylab("goal for rate (%)") +
+  scale_x_continuous(breaks = seq(0,60,5)) + 
   geom_col(alpha = .9, position = "dodge", col="gray15", size=.25)
 gg
 
@@ -80,6 +81,7 @@ gg <- ggplot(sequences_exp_def[time_since_faceoff < max_time,
   coord_cartesian(xlim = c(0,max_time), ylim = c(0,.45)) +
   xlab("time elapsed since faceoff") +
   ylab("goal against rate (%)") +
+  scale_x_continuous(breaks = seq(0,60,5)) + 
   geom_col(alpha = .9, position = "dodge", col="gray15", size=.25)
 gg
 
