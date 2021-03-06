@@ -71,6 +71,7 @@ gg <- ggplot(sqo,
   coord_cartesian(xlim = c(-1,max_time+1), ylim = c(0,.35)) +
   xlab("time elapsed since faceoff") +
   ylab("goal for rate (%)") +
+  scale_x_continuous(breaks = seq(0,60,6)) + 
   geom_col(alpha = .9, position = "dodge", col="gray15", size = .25)
 gg
 if(save_figures) ggsave("report/figures/bar_off_nhl.png", gg, "png", width=3, height=2, units="in", dpi = 320)
