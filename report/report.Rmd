@@ -261,7 +261,7 @@ In view of our analysis of the Erie dataset, it is reasonable to think that winn
 We strongly believe that this is due to a lack of data points caused in part by the restriction to offensive faceoffs.
 Looking back at the fact that the various probabilities estimated were no greater than 0.5\% = 0.005, it would have been surprising to obtain statistically significant results with the `r dt_table$nb_fo_oz_dz` offensive faceoffs of the Erie dataset.
 
-In order to convince ourselves that our intuition is nevertheless backed by data, we now perform a similar analysis using the 2019-2020 NHL data.\footnote{We fetched the data using \texttt{tidynhl}, an \texttt{R} package  developed on top of the NHL Open API.}
+In order to convince ourselves that our intuition is nevertheless backed by data, we now perform a similar analysis using the 2018-19 and 2019-20 NHL data.\footnote{We fetched the data using \href{https://jplecavalier.github.io/tidynhl/}{\texttt{tidynhl}}, an \texttt{R} package developed on top of the NHL Stats and Records APIs.}
 We consider this data to be balanced, as all teams appear in it roughly the same amount of times.
 Table \@ref(tab:nhl1) provides a basic summary of this NHL dataset.
 
@@ -283,7 +283,6 @@ dt_table_nhl <- dt_model_nhl[, .(
 knitr::kable(
   x = dt_table_nhl,
   format = "latex",
-  position = "h",
   booktabs = T, 
   col.names = c("Min. game date", "Max. game date", "Games", "FOs", "OZ/DZ FOs", "Goals", "OZ/DZ Goals"),
   align = "c",
@@ -293,18 +292,26 @@ knitr::kable(
 ```
 
 ```{r nhl_glm}
-mod_nhl <- glm(formula = result_goal_for ~ faceoff_win,
-           family = binomial,
-           data = dt_model_nhl[faceoff_zone == "offense"])
+dt_model_nhl[, faceoff_oz := faceoff_zone == "offense"]
+
+mod_nhl <- glm(
+  formula = result_goal_for / length_seconds ~ faceoff_win * faceoff_oz,
+  family = binomial,
+  data = dt_model_nhl
+)
 
 summary_nhl <- summary(mod_nhl)
 ```
 
+#### The overall impact of winning a faceoff.
 It seems worthwhile pointing out that we now work with `r dt_table_nhl$nb_fo_oz_dz` faceoffs that lead to `r dt_table_nhl$nb_goals_oz_dz` goals.
-As we did in the first section of the report, we first fit a logistic regression with an intercept, `FO_win` as covariate, and the variable `GF` as response.
-This time, we obtained a $\beta_{FO\_win} =$ `r round(summary_nhl$coefficients[2,][1], 3)` with a p-value of `r summary_nhl$coefficients[2,][4]`.
-There is thus plenty of evidence that winning an offensive faceoff significantly increases the odds of scoring a goal during the sequences that follow.
+As we did in the first section of the report, we fit a logistic regression on this data.
+We directly fitted the more complex model with an intercept, `FO_win` and `FO_OZ` as covariates, an interaction between those two covariates, and the variable `GF` as response.
+We obtained $\beta_{FO\_win} =$ `r round(summary_nhl$coefficients[2,][1], 3)`, $\beta_{FO\_OZ} =$ `r round(summary_nhl$coefficients[3,][1], 3)` and $\beta_{FO\_win + FO\_OZ} =$ `r round(summary_nhl$coefficients[4,][1], 3)`. This time, due to the much larger dataset, all the p-values but the one of $\beta_{FO\_win}$ were statistically significative.
+The conclusion reached in the first section is still valid, there is nothing better than winning an offensive faceoff to increase the probability of scoring a goal.
+Furthermore, we can now say that the edge is better if you can get an offensive faceoff—win it or lose it—than if you win a faceoff anywhere else on the ice.
 
+#### Breaking down the sequences by seconds.
 We again begin the more granular analysis by constructing a barchart showing the proportion of goals (for) scored in a given time window, conditional on the outcome of the faceoff.
 The huge amount of data now allow us to use smaller bins of two seconds, that is $[t,t+2)$.
 The result is displayed on the right panel of Figure \ref{fig:barchart-nhl}.
